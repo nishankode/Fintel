@@ -1,6 +1,8 @@
 import logging
 from fastapi import APIRouter
 
+from app.db.dependencies import DBDependency
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
