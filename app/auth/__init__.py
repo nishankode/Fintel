@@ -8,9 +8,14 @@ from app.auth.jwt import (
     decode_access_token
 )
 
+from app.auth.dependencies import (
+    CurrentUserDependency
+)
+
 __all__ = [
     "hash_password", 
     "verify_password",
     "create_access_token",
-    "decode_access_token"
+    "decode_access_token",
+    "CurrentUserDependency"
 ]

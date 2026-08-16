@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from app.schemas.auth import UserRegisterRequest, UserRegisteredResponse, TokenResponse
 from app.db.dependencies import DBDependency
 from app.models import User
-from app.auth import hash_password, verify_password, create_access_token
+from app.auth import hash_password, verify_password, create_access_token, CurrentUserDependency
 
 logger = logging.getLogger(__name__)
 
@@ -135,3 +135,10 @@ def login_user(
         "access_token": access_token,
         "token_type": "bearer"
     }
+
+
+@router.get("/me", response_model=UserRegisteredResponse)
+def get_current_user_details(
+    current_user: CurrentUserDependency,
+):
+    return current_user
