@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
 
+    sec_user_agent: str
+    sec_base_url: str = "https://www.sec.gov"
+    sec_data_base_url: str = "https://data.sec.gov"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
