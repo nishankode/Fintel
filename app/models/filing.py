@@ -63,3 +63,8 @@ class Filing(Base):
     company: Mapped["Company"] = (
         relationship(back_populates="filings")
     )
+
+    storage_key: Mapped[str | None] = mapped_column(
+        String(1000),
+        nullable=True,
+    )

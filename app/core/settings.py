@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     sec_base_url: str = "https://www.sec.gov"
     sec_data_base_url: str = "https://data.sec.gov"
 
+    document_storage_path: str = "data"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
