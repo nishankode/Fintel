@@ -11,3 +11,9 @@ class ParsedFilingDocument(BaseModel):
     text: str
     character_count: int
     sections: list[ParsedFilingSection]
+
+class PreparedChunk(BaseModel):
+    section_key: str
+    chunk_index: int
+    text: str
+    character_count: int
