@@ -20,6 +20,10 @@ class Settings(BaseSettings):
 
     document_storage_path: str = "data"
 
+    embedding_model_name: str = "BAAI/bge-small-en-v1.5"
+    embedding_dimension: int = 384
+    embedding_device: str = "cpu"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

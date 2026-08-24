@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from pgvector.sqlalchemy import VECTOR
 from sqlalchemy import (
     ForeignKey,
     Integer,
@@ -64,6 +65,11 @@ class Chunk(Base):
     character_count: Mapped[int] = mapped_column(
         Integer,
         nullable=False,
+    )
+
+    embedding: Mapped[list[float] | None] = mapped_column(
+        VECTOR(384),
+        nullable=True,
     )
 
     filing: Mapped["Filing"] = relationship(
