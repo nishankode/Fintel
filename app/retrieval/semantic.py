@@ -31,9 +31,21 @@ class SemanticRetriever:
         query: str,
         top_k: int = 5,
     ) -> list[SemanticSearchResult]:
+        normalized_query = query.strip()
+
+        if not normalized_query:
+            raise ValueError(
+                "Semantic search query must not be blank"
+            )
+
+        if top_k <= 0:
+            raise ValueError(
+                "Semantic search top_k must be greater than zero"
+            )
+
         query_embedding = (
             self.embedding_service.embed_query(
-                query
+                normalized_query
             )
         )
 
