@@ -1,6 +1,6 @@
 import logging
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.embeddings.service import EmbeddingService
@@ -25,6 +25,19 @@ class ChunkEmbeddingService:
         self,
         filing: Filing,
     ) -> int:
+        total_chunks = self.db.scalar(
+            select(func.count()).select_from(Chunk).where(
+                Chunk.filing_id == filing.id,
+            )
+        )
+
+        if total_chunks == 0:
+            logger.info(
+                "No chunks found for filing embedding: filing_id=%s",
+                filing.id,
+            )
+            return 0
+
         chunks = list(
             self.db.scalars(
                 select(Chunk)
@@ -40,9 +53,14 @@ class ChunkEmbeddingService:
         )
 
         if not chunks:
+            if filing.status != "indexed":
+                filing.status = "indexed"
+                self.db.commit()
+
             logger.info(
-                "No unembedded chunks found: filing_id=%s",
+                "Filing chunks already embedded: filing_id=%s chunks=%s",
                 filing.id,
+                total_chunks,
             )
             return 0
 
@@ -68,14 +86,27 @@ class ChunkEmbeddingService:
                 )
             )
 
-            for chunk, embedding in zip(
-                batch,
-                embeddings,
-                strict=True,
-            ):
-                chunk.embedding = embedding
+            try:
+                for chunk, embedding in zip(
+                    batch,
+                    embeddings,
+                    strict=True,
+                ):
+                    chunk.embedding = embedding
 
-            self.db.commit()
+                self.db.commit()
+            except Exception:
+                self.db.rollback()
+
+                logger.exception(
+                    "Embedding batch persistence failed: "
+                    "filing_id=%s batch_start=%s batch_size=%s",
+                    filing.id,
+                    start,
+                    len(batch),
+                )
+
+                raise
 
             embedded_count += len(batch)
 
