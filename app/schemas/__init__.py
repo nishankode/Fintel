@@ -20,6 +20,8 @@ from app.schemas.ingestion import (
     FilingIngestionResponse,
 )
 
+from app.schemas.ingestion_job import IngestionJobResponse
+
 from app.schemas.retrieval import (
     SemanticSearchFilterRequest,
     SemanticSearchRequest,
@@ -44,6 +46,7 @@ __all__ = [
     "CompanyIngestionRequest",
     "CompanyIngestionResponse",
     "FilingIngestionResponse",
+    "IngestionJobResponse",
     "SemanticSearchFilterRequest",
     "SemanticSearchRequest",
     "SemanticSearchResponse",
