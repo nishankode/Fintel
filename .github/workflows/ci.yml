@@ -76,3 +76,19 @@ jobs:
       - run: uv run alembic upgrade head
 
       - run: uv run python -m unittest discover -s tests
+
+  deployment-config:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: docker compose config
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.14.3"
+
+      - run: terraform -chdir=infra/aws init -backend=false
+
+      - run: terraform -chdir=infra/aws validate
