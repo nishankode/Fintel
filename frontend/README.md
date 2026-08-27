@@ -1,0 +1,22 @@
+# Fintel Frontend
+
+React/Vite analyst console for the Fintel FastAPI backend.
+
+## Local Development
+
+```powershell
+npm install
+npm run dev
+```
+
+The UI expects the API at `VITE_API_BASE_URL`, defaulting to `http://localhost:8000`.
+
+## Checks
+
+```powershell
+npm run build
+npm run lint
+npm run test:e2e
+```
+
+The e2e smoke test expects the Docker Compose stack to be running.

@@ -15,6 +15,14 @@ __pycache__/
 logs/
 *.log
 
+# Frontend artifacts
+frontend/node_modules/
+frontend/dist/
+frontend/test-results/
+frontend/playwright-report/
+frontend/.vite/
+frontend-*.png
+
 # IDE
 .vscode/
 .idea/

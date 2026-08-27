@@ -25,6 +25,19 @@ curl http://localhost:8000/health
 curl http://localhost:8000/health/ready
 ```
 
+The local analyst UI runs at:
+
+```text
+http://localhost:5173
+```
+
+The repeatable UI smoke test lives in `frontend/tests/ui-smoke.spec.ts` and can be run after the local stack is up:
+
+```powershell
+cd frontend
+npm run test:e2e
+```
+
 ## 2. Create A User
 
 ```powershell

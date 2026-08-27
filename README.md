@@ -110,6 +110,7 @@ docker compose up --build
 
 This starts:
 
+- Fintel Analyst Console on `localhost:5173`
 - FastAPI API on `localhost:8000`
 - ingestion worker
 - PostgreSQL with pgvector
@@ -128,6 +129,12 @@ Run a full Compose smoke test:
 ```
 
 The smoke script uses the isolated Compose project name `fintel-smoke` and removes only that project's test volumes at the end.
+
+Open the local UI:
+
+```text
+http://localhost:5173
+```
 
 ## Important Endpoints
 

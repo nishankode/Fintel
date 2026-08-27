@@ -22,6 +22,8 @@ if (-not (Test-Path $python)) {
 Invoke-Checked $python @("-m", "compileall", "app", "tests")
 Invoke-Checked $python @("-m", "alembic", "current")
 Invoke-Checked $python @("-m", "unittest", "discover", "-s", "tests")
+Invoke-Checked "npm" @("--prefix", "frontend", "run", "build")
+Invoke-Checked "npm" @("--prefix", "frontend", "run", "lint")
 Invoke-Checked "docker" @("compose", "config", "--quiet")
 Invoke-Checked "terraform" @("-chdir=infra/aws", "validate")
 

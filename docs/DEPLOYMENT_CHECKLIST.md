@@ -47,11 +47,13 @@ Run these before building or deploying:
 .\.venv\Scripts\python.exe -m unittest discover -s tests
 .\.venv\Scripts\python.exe -m alembic current
 docker compose config --quiet
+cd frontend; npm run build; npm run lint; cd ..
+cd frontend; npm run test:e2e; cd ..
 terraform -chdir=infra/aws validate
 .\scripts\compose-smoke.ps1
 ```
 
-The smoke script uses the isolated Compose project name `fintel-smoke` by default and removes only that project's volumes after it finishes.
+The frontend e2e smoke test expects the local stack to be running. The Compose smoke script uses the isolated Compose project name `fintel-smoke` by default and removes only that project's volumes after it finishes.
 
 ## Docker Compose Deployment Path
 
