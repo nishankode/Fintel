@@ -207,3 +207,7 @@ def run_forever() -> None:
 
     while True:
         worker.run_once()
+
+
+if __name__ == "__main__":
+    run_forever()
