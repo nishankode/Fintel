@@ -179,6 +179,8 @@ OPENAI_MODEL=gpt-5-mini
 
 The OpenAI path calls the Responses API from the server and keeps the API key in environment configuration.
 
+Linux container builds pin Torch to the CPU-only PyTorch index to avoid pulling CUDA runtime packages into the API and worker images.
+
 ## Storage Provider
 
 Local development uses `DOCUMENT_STORAGE_PROVIDER=local` and writes SEC HTML under `data/`. For AWS or S3-compatible deployments, set:

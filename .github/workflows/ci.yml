@@ -83,7 +83,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - run: docker compose config
+      - run: docker compose config --quiet
 
       - uses: hashicorp/setup-terraform@v3
         with:

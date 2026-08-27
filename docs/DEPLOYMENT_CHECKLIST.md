@@ -46,7 +46,7 @@ Run these before building or deploying:
 .\.venv\Scripts\python.exe -m compileall app tests
 .\.venv\Scripts\python.exe -m unittest discover -s tests
 .\.venv\Scripts\python.exe -m alembic current
-docker compose config
+docker compose config --quiet
 terraform -chdir=infra/aws validate
 .\scripts\compose-smoke.ps1
 ```
@@ -84,7 +84,7 @@ Use this path for the production-style architecture:
 
 ## Known Production Concerns
 
-- The current image includes the local embedding stack and is large. It works, but a production optimization pass should pin CPU-only PyTorch wheels or split embedding work into a dedicated service/image.
+- The image includes the local embedding stack and is about 2.16 GB after pinning Linux builds to CPU-only Torch. A later scale optimization could split embedding work into a dedicated service/image.
 - The rate limiter is process-local. For multi-instance API traffic, move rate-limit counters to Redis.
 - Terraform validates locally, but provider/runtime availability and exact AWS costs still need a real `plan` review in the target account.
 - No public frontend is included. The current product surface is an API backend.
