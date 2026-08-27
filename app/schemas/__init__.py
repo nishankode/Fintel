@@ -14,6 +14,12 @@ from app.schemas.filing import (
     FilingResponse
 )
 
+from app.schemas.ingestion import (
+    CompanyIngestionRequest,
+    CompanyIngestionResponse,
+    FilingIngestionResponse,
+)
+
 __all__ = [
     "UserRegisterRequest",
     "UserRegisteredResponse",
@@ -21,5 +27,8 @@ __all__ = [
     "CompanyCreateRequest",
     "CompanyResponse",
     "FilingCreateRequest",
-    "FilingResponse"
+    "FilingResponse",
+    "CompanyIngestionRequest",
+    "CompanyIngestionResponse",
+    "FilingIngestionResponse",
 ]

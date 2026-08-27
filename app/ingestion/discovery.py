@@ -41,7 +41,11 @@ class SECDiscoveryService:
             if (normalized_types is not None and filing_type not in normalized_types):
                 continue
 
-            report_date = date.fromisoformat(report_dates[index] if report_dates[index] else None)
+            report_date = (
+                date.fromisoformat(report_dates[index])
+                if report_dates[index]
+                else None
+            )
 
             filing = SECFilingMetadata(
                 accession_number=accession_numbers[index],
