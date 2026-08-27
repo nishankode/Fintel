@@ -30,6 +30,9 @@ services:
       OPENAI_BASE_URL: https://api.openai.com/v1
       OPENAI_MODEL: gpt-5-mini
       OPENAI_TIMEOUT_SECONDS: "30"
+      RATE_LIMIT_ENABLED: "true"
+      RATE_LIMIT_REQUESTS: "120"
+      RATE_LIMIT_WINDOW_SECONDS: "60"
     volumes:
       - filing-data:/app/data
     depends_on:
@@ -67,6 +70,9 @@ services:
       OPENAI_BASE_URL: https://api.openai.com/v1
       OPENAI_MODEL: gpt-5-mini
       OPENAI_TIMEOUT_SECONDS: "30"
+      RATE_LIMIT_ENABLED: "true"
+      RATE_LIMIT_REQUESTS: "120"
+      RATE_LIMIT_WINDOW_SECONDS: "60"
     volumes:
       - filing-data:/app/data
     depends_on:

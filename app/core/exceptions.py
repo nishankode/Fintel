@@ -4,8 +4,48 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
 
+from app.core.middleware import REQUEST_ID_HEADER
+
 
 logger = logging.getLogger(__name__)
+
+
+def _request_id(
+    request: Request,
+) -> str | None:
+    return getattr(
+        request.state,
+        "request_id",
+        None,
+    )
+
+
+def _error_content(
+    detail: str,
+    request: Request,
+) -> dict[str, str]:
+    content = {
+        "detail": detail,
+    }
+    request_id = _request_id(request)
+
+    if request_id is not None:
+        content["request_id"] = request_id
+
+    return content
+
+
+def _headers(
+    request: Request,
+) -> dict[str, str]:
+    request_id = _request_id(request)
+
+    if request_id is None:
+        return {}
+
+    return {
+        REQUEST_ID_HEADER: request_id,
+    }
 
 
 def register_exception_handlers(
@@ -18,9 +58,8 @@ def register_exception_handlers(
     ) -> JSONResponse:
         return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
-            content={
-                "detail": str(exc),
-            },
+            content=_error_content(str(exc), request),
+            headers=_headers(request),
         )
 
     @app.exception_handler(SQLAlchemyError)
@@ -36,9 +75,11 @@ def register_exception_handlers(
             status_code=(
                 status.HTTP_500_INTERNAL_SERVER_ERROR
             ),
-            content={
-                "detail": "Database operation failed",
-            },
+            content=_error_content(
+                "Database operation failed",
+                request,
+            ),
+            headers=_headers(request),
         )
 
     @app.exception_handler(Exception)
@@ -54,7 +95,9 @@ def register_exception_handlers(
             status_code=(
                 status.HTTP_500_INTERNAL_SERVER_ERROR
             ),
-            content={
-                "detail": "Internal server error",
-            },
+            content=_error_content(
+                "Internal server error",
+                request,
+            ),
+            headers=_headers(request),
         )

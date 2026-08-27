@@ -58,6 +58,9 @@ jobs:
       OPENAI_BASE_URL: https://api.openai.com/v1
       OPENAI_MODEL: gpt-5-mini
       OPENAI_TIMEOUT_SECONDS: "30"
+      RATE_LIMIT_ENABLED: "false"
+      RATE_LIMIT_REQUESTS: "120"
+      RATE_LIMIT_WINDOW_SECONDS: "60"
 
     steps:
       - uses: actions/checkout@v4

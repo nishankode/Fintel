@@ -39,6 +39,10 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-5-mini"
     openai_timeout_seconds: float = 30.0
 
+    rate_limit_enabled: bool = True
+    rate_limit_requests: int = 120
+    rate_limit_window_seconds: int = 60
+
     @field_validator("debug", mode="before")
     @classmethod
     def parse_debug(
