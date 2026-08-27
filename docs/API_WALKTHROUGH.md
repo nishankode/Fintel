@@ -25,7 +25,7 @@ curl http://localhost:8000/health
 curl http://localhost:8000/health/ready
 ```
 
-The local analyst UI runs at:
+The local research chat UI runs at:
 
 ```text
 http://localhost:5173
@@ -37,6 +37,8 @@ The repeatable UI smoke test lives in `frontend/tests/ui-smoke.spec.ts` and can 
 cd frontend
 npm run test:e2e
 ```
+
+The UI keeps corpus setup and filing ingestion in the left sidebar. Once filings are indexed, ask questions in the main chat area; each answer includes citations back to the retrieved filing chunks.
 
 ## 2. Create A User
 

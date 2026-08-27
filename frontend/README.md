@@ -1,6 +1,6 @@
 # Fintel Frontend
 
-React/Vite analyst console for the Fintel FastAPI backend.
+React/Vite research chat for the Fintel FastAPI backend. The app combines company setup, filing ingestion, and cited filing Q&A in one local interface.
 
 ## Local Development
 
