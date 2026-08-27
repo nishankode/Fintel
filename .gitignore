@@ -21,3 +21,10 @@ logs/
 
 # Downloaded filing data
 data/
+
+# Terraform local provider/cache state
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log

@@ -193,3 +193,5 @@ GitHub Actions
 ```
 
 A cheaper recruiter-facing deployment can run the same API/worker/Postgres/Redis shape on one VM with Docker Compose.
+
+Terraform for the AWS learning deployment lives in `infra/aws`. Treat it as a reviewable deployment blueprint and cost-check it before applying.
