@@ -18,8 +18,8 @@ PostgreSQL + pgvector
 Redis
   -> ingestion job queue only
 
-Local storage
-  -> raw downloaded SEC HTML under data/
+Local/S3 storage
+  -> raw downloaded SEC HTML
 ```
 
 ## Ingestion Flow
@@ -127,6 +127,8 @@ Run a full Compose smoke test:
 .\scripts\compose-smoke.ps1
 ```
 
+The smoke script uses the isolated Compose project name `fintel-smoke` and removes only that project's test volumes at the end.
+
 ## Important Endpoints
 
 - `POST /auth/register`
@@ -207,3 +209,8 @@ GitHub Actions
 A cheaper recruiter-facing deployment can run the same API/worker/Postgres/Redis shape on one VM with Docker Compose.
 
 Terraform for the AWS learning deployment lives in `infra/aws`. Treat it as a reviewable deployment blueprint and cost-check it before applying.
+
+## Project Guides
+
+- [Architecture](docs/ARCHITECTURE.md)
+- [Deployment checklist](docs/DEPLOYMENT_CHECKLIST.md)
