@@ -447,7 +447,30 @@ function Metric({ label, value }: { label: string; value: string }) {
 
 function JobStatus({ job, loading }: { job: IngestionJob | null; loading: boolean }) {
   if (!job) return <EmptyState text="Queue a job to watch ingestion state." />
-  return <div className="job-status"><div><span>Job #{job.id}</span><strong>{job.status}</strong></div>{loading && <Loader2 className="spin" size={18} aria-hidden="true" />}{job.error_message && <p>{job.error_message}</p>}</div>
+  const progress = Math.max(0, Math.min(100, job.progress_percent ?? 0))
+
+  return (
+    <div className="job-status">
+      <div className="job-status-header">
+        <div>
+          <span>Job #{job.id}</span>
+          <strong>{job.status}</strong>
+        </div>
+        <div className="job-progress-percent">
+          {loading && <Loader2 className="spin" size={15} aria-hidden="true" />}
+          <strong>{progress}%</strong>
+        </div>
+      </div>
+      <div className="progress-track" aria-label={`Ingestion progress ${progress}%`}>
+        <span style={{ width: `${progress}%` }} />
+      </div>
+      <div className="job-progress-meta">
+        <span>{job.progress_message ?? 'Waiting for worker update'}</span>
+        <span>{job.progress_current}/{job.progress_total || 1}</span>
+      </div>
+      {job.error_message && <p>{job.error_message}</p>}
+    </div>
+  )
 }
 
 function StatusPill({ label, healthy }: { label: string; healthy: boolean }) {

@@ -33,6 +33,9 @@ class IngestionJobService:
             job_type="company_filings_ingestion",
             status="queued",
             payload=payload,
+            progress_current=0,
+            progress_total=1,
+            progress_message="Queued for ingestion",
         )
 
         self.db.add(job)
@@ -57,6 +60,12 @@ class IngestionJobService:
     ) -> None:
         job.status = "running"
         job.error_message = None
+        job.progress_current = 0
+        job.progress_total = max(
+            job.progress_total,
+            1,
+        )
+        job.progress_message = "Starting ingestion"
         self.db.commit()
 
     def mark_completed(
@@ -64,6 +73,12 @@ class IngestionJobService:
         job: IngestionJob,
     ) -> None:
         job.status = "completed"
+        job.progress_total = max(
+            job.progress_total,
+            1,
+        )
+        job.progress_current = job.progress_total
+        job.progress_message = "Ingestion completed"
         job.completed_at = datetime.now(UTC)
         self.db.commit()
 
@@ -75,5 +90,27 @@ class IngestionJobService:
         self.db.rollback()
         job.status = "failed"
         job.error_message = str(error)
+        job.progress_message = "Ingestion failed"
         job.completed_at = datetime.now(UTC)
+        self.db.commit()
+
+    def update_progress(
+        self,
+        job: IngestionJob,
+        current: int,
+        total: int,
+        message: str,
+    ) -> None:
+        job.progress_total = max(
+            total,
+            1,
+        )
+        job.progress_current = max(
+            0,
+            min(
+                current,
+                job.progress_total,
+            ),
+        )
+        job.progress_message = message[:255]
         self.db.commit()

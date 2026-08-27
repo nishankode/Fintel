@@ -5,6 +5,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Index,
+    Integer,
     String,
     Text,
     func,
@@ -63,6 +64,25 @@ class IngestionJob(Base):
         nullable=True,
     )
 
+    progress_current: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+        server_default="0",
+    )
+
+    progress_total: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+        server_default="0",
+    )
+
+    progress_message: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -80,3 +100,31 @@ class IngestionJob(Base):
         DateTime(timezone=True),
         nullable=True,
     )
+
+    @property
+    def progress_percent(self) -> int:
+        if self.status == "completed":
+            return 100
+
+        if self.status == "failed":
+            return min(
+                99,
+                self._calculated_progress_percent(),
+            )
+
+        return self._calculated_progress_percent()
+
+    def _calculated_progress_percent(self) -> int:
+        progress_current = self.progress_current or 0
+        progress_total = self.progress_total or 0
+
+        if progress_total <= 0:
+            return 0
+
+        return max(
+            0,
+            min(
+                100,
+                int((progress_current / progress_total) * 100),
+            ),
+        )

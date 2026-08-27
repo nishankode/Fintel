@@ -11,6 +11,10 @@ class IngestionJobResponse(BaseModel):
     status: str
     payload: dict[str, Any]
     error_message: str | None
+    progress_current: int
+    progress_total: int
+    progress_percent: int
+    progress_message: str | None
     created_at: datetime
     updated_at: datetime
     completed_at: datetime | None

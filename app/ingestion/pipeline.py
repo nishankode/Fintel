@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from sqlalchemy import select
@@ -136,6 +137,7 @@ class CompanyIngestionPipeline:
         company: Company,
         filing_types: set[str] | None = None,
         limit: int | None = None,
+        progress_callback: Callable[[int, int, str], None] | None = None,
     ) -> CompanyIngestionResult:
         new_filings = (
             self.filing_persistence_service.sync_company_filings(
@@ -169,12 +171,34 @@ class CompanyIngestionPipeline:
             self.db.scalars(query).all()
         )
 
-        processed_filings = [
-            self.filing_ingestion_pipeline.ingest_filing(
+        total_filings = max(
+            len(filings_to_process),
+            1,
+        )
+
+        if progress_callback:
+            progress_callback(
+                0,
+                total_filings,
+                f"Discovered {len(new_filings)} new filing(s)",
+            )
+
+        processed_filings = []
+        for index, filing in enumerate(
+            filings_to_process,
+            start=1,
+        ):
+            result = self.filing_ingestion_pipeline.ingest_filing(
                 filing
             )
-            for filing in filings_to_process
-        ]
+            processed_filings.append(result)
+
+            if progress_callback:
+                progress_callback(
+                    index,
+                    total_filings,
+                    f"Indexed {filing.filing_type} {filing.accession_number}",
+                )
 
         return CompanyIngestionResult(
             company_id=company.id,

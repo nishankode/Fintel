@@ -178,6 +178,16 @@ class IngestionWorker:
                 company=company,
                 filing_types=filing_types,
                 limit=payload.get("limit"),
+                progress_callback=(
+                    lambda current, total, message: IngestionJobService(
+                        db
+                    ).update_progress(
+                        job=job,
+                        current=current,
+                        total=total,
+                        message=message,
+                    )
+                ),
             )
         finally:
             sec_client.close()

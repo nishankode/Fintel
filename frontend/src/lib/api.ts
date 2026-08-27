@@ -30,6 +30,10 @@ export type IngestionJob = {
   status: string
   payload: Record<string, unknown>
   error_message: string | null
+  progress_current: number
+  progress_total: number
+  progress_percent: number
+  progress_message: string | null
   created_at: string
   updated_at: string
   completed_at: string | null

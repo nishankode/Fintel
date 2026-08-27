@@ -392,7 +392,6 @@ textarea:focus {
 }
 
 .compact-row,
-.job-status,
 .empty-state {
   min-width: 0;
   padding: 9px 10px;
@@ -425,16 +424,34 @@ textarea:focus {
 }
 
 .job-status {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
   margin-top: 10px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-soft);
 }
 
-.job-status div {
+.job-status-header,
+.job-progress-percent,
+.job-progress-meta {
+  display: flex;
+  align-items: center;
+}
+
+.job-status-header {
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.job-status-header > div:first-child {
   display: flex;
   flex-direction: column;
   gap: 3px;
+}
+
+.job-progress-percent {
+  gap: 6px;
+  color: var(--accent-strong);
 }
 
 .job-status span,
@@ -446,6 +463,35 @@ textarea:focus {
 
 .job-status p {
   color: var(--error);
+}
+
+.progress-track {
+  height: 8px;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #d8dfdb;
+}
+
+.progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 240ms ease;
+}
+
+.job-progress-meta {
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.job-progress-meta span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .chat-workspace {
