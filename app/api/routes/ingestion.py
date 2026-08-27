@@ -29,7 +29,7 @@ from app.schemas.ingestion import (
     CompanyIngestionResponse,
 )
 from app.schemas.ingestion_job import IngestionJobResponse
-from app.storage.local import LocalDocumentStorage
+from app.storage.factory import build_document_storage
 
 
 logger = logging.getLogger(__name__)
@@ -67,9 +67,7 @@ def ingest_company_filings(
     sec_client = SECClient()
 
     try:
-        storage = LocalDocumentStorage(
-            base_path=settings.document_storage_path,
-        )
+        storage = build_document_storage(settings)
         embedding_service = EmbeddingService(
             model_name=settings.embedding_model_name,
             expected_dimension=settings.embedding_dimension,

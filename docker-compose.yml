@@ -14,7 +14,12 @@ services:
       JWT_ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: "30"
       SEC_USER_AGENT: Fintel demo contact@example.com
+      DOCUMENT_STORAGE_PROVIDER: local
       DOCUMENT_STORAGE_PATH: /app/data
+      S3_BUCKET_NAME: ""
+      S3_KEY_PREFIX: ""
+      S3_ENDPOINT_URL: ""
+      S3_REGION_NAME: ""
       EMBEDDING_MODEL_NAME: BAAI/bge-small-en-v1.5
       EMBEDDING_DIMENSION: "384"
       EMBEDDING_DEVICE: cpu
@@ -46,7 +51,12 @@ services:
       JWT_ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: "30"
       SEC_USER_AGENT: Fintel demo contact@example.com
+      DOCUMENT_STORAGE_PROVIDER: local
       DOCUMENT_STORAGE_PATH: /app/data
+      S3_BUCKET_NAME: ""
+      S3_KEY_PREFIX: ""
+      S3_ENDPOINT_URL: ""
+      S3_REGION_NAME: ""
       EMBEDDING_MODEL_NAME: BAAI/bge-small-en-v1.5
       EMBEDDING_DIMENSION: "384"
       EMBEDDING_DEVICE: cpu

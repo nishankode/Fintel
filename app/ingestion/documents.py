@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.integrations.sec.client import SECClient
 from app.models import Filing
-from app.storage.local import LocalDocumentStorage
+from app.storage.base import DocumentStorage
 
 
 logger = logging.getLogger(__name__)
@@ -15,7 +15,7 @@ class FilingDocumentService:
         self,
         db: Session,
         sec_client: SECClient,
-        storage: LocalDocumentStorage,
+        storage: DocumentStorage,
     ) -> None:
         self.db = db
         self.sec_client = sec_client

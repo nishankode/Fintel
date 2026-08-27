@@ -18,7 +18,12 @@ class Settings(BaseSettings):
     sec_base_url: str = "https://www.sec.gov"
     sec_data_base_url: str = "https://data.sec.gov"
 
+    document_storage_provider: Literal["local", "s3"] = "local"
     document_storage_path: str = "data"
+    s3_bucket_name: str | None = None
+    s3_key_prefix: str = ""
+    s3_endpoint_url: str | None = None
+    s3_region_name: str | None = None
 
     embedding_model_name: str = "BAAI/bge-small-en-v1.5"
     embedding_dimension: int = 384

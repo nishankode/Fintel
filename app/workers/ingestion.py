@@ -22,7 +22,7 @@ from app.ingestion.pipeline import (
 from app.ingestion.queue import IngestionQueue
 from app.integrations.sec.client import SECClient
 from app.models import Company, IngestionJob
-from app.storage.local import LocalDocumentStorage
+from app.storage.factory import build_document_storage
 
 
 logger = logging.getLogger(__name__)
@@ -127,9 +127,7 @@ class IngestionWorker:
         sec_client = SECClient()
 
         try:
-            storage = LocalDocumentStorage(
-                base_path=settings.document_storage_path,
-            )
+            storage = build_document_storage(settings)
             embedding_service = EmbeddingService(
                 model_name=settings.embedding_model_name,
                 expected_dimension=settings.embedding_dimension,

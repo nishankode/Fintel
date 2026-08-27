@@ -73,6 +73,7 @@ DATABASE_URL=postgresql+psycopg://...
 JWT_SECRET_KEY=...
 SEC_USER_AGENT=Your App your-email@example.com
 DEBUG=false
+DOCUMENT_STORAGE_PROVIDER=local
 LLM_PROVIDER=extractive
 ```
 
@@ -150,6 +151,19 @@ OPENAI_MODEL=gpt-5-mini
 ```
 
 The OpenAI path calls the Responses API from the server and keeps the API key in environment configuration.
+
+## Storage Provider
+
+Local development uses `DOCUMENT_STORAGE_PROVIDER=local` and writes SEC HTML under `data/`. For AWS or S3-compatible deployments, set:
+
+```text
+DOCUMENT_STORAGE_PROVIDER=s3
+S3_BUCKET_NAME=...
+S3_KEY_PREFIX=raw
+S3_REGION_NAME=...
+```
+
+The ingestion services continue to use logical storage keys either way, so switching storage providers does not require schema or parser changes.
 
 ## Deployment Direction
 
