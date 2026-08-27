@@ -65,6 +65,24 @@ class RequestMiddlewareTests(unittest.TestCase):
             "request-456",
         )
 
+    def test_allows_configured_cors_origin(self):
+        app = self._app()
+        client = TestClient(app)
+
+        response = client.options(
+            "/ok",
+            headers={
+                "Origin": "http://localhost:5173",
+                "Access-Control-Request-Method": "GET",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.headers["access-control-allow-origin"],
+            "http://localhost:5173",
+        )
+
     def _app(self) -> FastAPI:
         app = FastAPI()
         register_middleware(

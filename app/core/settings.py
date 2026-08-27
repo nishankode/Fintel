@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     rate_limit_enabled: bool = True
     rate_limit_requests: int = 120
     rate_limit_window_seconds: int = 60
+    cors_allowed_origins: str = (
+        "http://localhost:5173,http://127.0.0.1:5173"
+    )
 
     @field_validator("debug", mode="before")
     @classmethod
@@ -60,6 +63,14 @@ class Settings(BaseSettings):
                 return False
 
         return value
+
+    @property
+    def parsed_cors_allowed_origins(self) -> list[str]:
+        return [
+            origin.strip()
+            for origin in self.cors_allowed_origins.split(",")
+            if origin.strip()
+        ]
 
     model_config = SettingsConfigDict(
         env_file=".env",

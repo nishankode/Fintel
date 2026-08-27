@@ -5,6 +5,7 @@ from collections.abc import MutableMapping
 from uuid import uuid4
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse, Response
 
@@ -66,6 +67,17 @@ def register_middleware(
     app: FastAPI,
     settings: Settings,
 ) -> None:
+    allowed_origins = settings.parsed_cors_allowed_origins
+
+    if allowed_origins:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=allowed_origins,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+
     if settings.rate_limit_enabled:
         app.add_middleware(
             RateLimitMiddleware,
