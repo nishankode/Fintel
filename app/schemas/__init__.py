@@ -27,6 +27,12 @@ from app.schemas.retrieval import (
     SemanticSearchResultResponse,
 )
 
+from app.schemas.query import (
+    EvidenceCitationResponse,
+    QueryRequest,
+    QueryResponse,
+)
+
 __all__ = [
     "UserRegisterRequest",
     "UserRegisteredResponse",
@@ -42,4 +48,7 @@ __all__ = [
     "SemanticSearchRequest",
     "SemanticSearchResponse",
     "SemanticSearchResultResponse",
+    "EvidenceCitationResponse",
+    "QueryRequest",
+    "QueryResponse",
 ]
