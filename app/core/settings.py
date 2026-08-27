@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     embedding_dimension: int = 384
     embedding_device: str = "cpu"
 
+    redis_url: str = "redis://localhost:6379/0"
+    ingestion_queue_name: str = "fintel:ingestion_jobs"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
