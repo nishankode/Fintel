@@ -37,3 +37,24 @@ class SemanticSearchResponse(BaseModel):
     query: str
     top_k: int
     results: list[SemanticSearchResultResponse]
+
+
+class HybridSearchResultResponse(BaseModel):
+    chunk_id: int
+    filing_id: int
+    company_id: int
+    ticker: str
+    accession_number: str
+    filing_type: str
+    section_key: str
+    chunk_index: int
+    text: str
+    rrf_score: float
+    semantic_rank: int | None
+    lexical_rank: int | None
+
+
+class HybridSearchResponse(BaseModel):
+    query: str
+    top_k: int
+    results: list[HybridSearchResultResponse]

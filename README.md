@@ -128,7 +128,18 @@ docker compose run --rm api alembic upgrade head
 - `POST /ingestion/companies/{ticker}/jobs`
 - `GET /ingestion/jobs/{job_id}`
 - `POST /retrieval/semantic`
+- `POST /retrieval/hybrid`
 - `POST /query`
+
+## Retrieval
+
+The retrieval layer supports:
+
+- exact semantic retrieval with pgvector cosine distance
+- PostgreSQL lexical retrieval with full-text search
+- hybrid retrieval using Reciprocal Rank Fusion
+
+RRF combines ranks instead of raw semantic and lexical scores, because those scores live on different scales.
 
 ## Evaluation
 
