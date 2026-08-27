@@ -1,6 +1,7 @@
 from dataclasses import dataclass
+from typing import Protocol
 
-from app.retrieval.semantic import SemanticSearchResult
+from app.models import Chunk, Company, Filing
 
 
 @dataclass(frozen=True)
@@ -15,8 +16,14 @@ class EvidenceChunk:
     section_key: str
     chunk_index: int
     text: str
-    cosine_distance: float
-    cosine_similarity: float
+    cosine_distance: float | None
+    cosine_similarity: float | None
+
+
+class RetrievalResult(Protocol):
+    chunk: Chunk
+    filing: Filing
+    company: Company
 
 
 @dataclass(frozen=True)
@@ -44,7 +51,7 @@ class RetrievalContextBuilder:
 
     def build(
         self,
-        results: list[SemanticSearchResult],
+        results: list[RetrievalResult],
     ) -> RetrievalContext:
         evidence_chunks = [
             EvidenceChunk(
@@ -58,8 +65,16 @@ class RetrievalContextBuilder:
                 section_key=result.chunk.section_key,
                 chunk_index=result.chunk.chunk_index,
                 text=self._truncate(result.chunk.text),
-                cosine_distance=result.cosine_distance,
-                cosine_similarity=result.cosine_similarity,
+                cosine_distance=getattr(
+                    result,
+                    "cosine_distance",
+                    None,
+                ),
+                cosine_similarity=getattr(
+                    result,
+                    "cosine_similarity",
+                    None,
+                ),
             )
             for index, result in enumerate(results, start=1)
         ]

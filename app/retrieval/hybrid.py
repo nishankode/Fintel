@@ -16,6 +16,8 @@ class HybridSearchResult:
     rrf_score: float
     semantic_rank: int | None
     lexical_rank: int | None
+    cosine_distance: float | None
+    cosine_similarity: float | None
 
 
 class HybridRetriever:
@@ -62,6 +64,8 @@ class HybridRetriever:
                 ),
                 semantic_rank=rank,
                 lexical_rank=None,
+                cosine_distance=result.cosine_distance,
+                cosine_similarity=result.cosine_similarity,
             )
 
         for rank, result in enumerate(
@@ -81,6 +85,8 @@ class HybridRetriever:
                     ),
                     semantic_rank=None,
                     lexical_rank=rank,
+                    cosine_distance=None,
+                    cosine_similarity=None,
                 )
                 continue
 

@@ -6,7 +6,9 @@ from app.llm.service import GeneratedAnswer
 from app.models import Chunk, Company, Filing
 from app.rag.context import RetrievalContextBuilder
 from app.rag.service import RAGAnswerService
+from app.retrieval.hybrid import HybridSearchResult
 from app.retrieval.semantic import SemanticSearchResult
+from app.schemas.query import QueryRequest
 
 
 class RetrievalContextBuilderTests(unittest.TestCase):
@@ -39,6 +41,26 @@ class RetrievalContextBuilderTests(unittest.TestCase):
         self.assertIn(
             "[E1] ACME 10-K mdna chunk 0",
             context.as_prompt_text(),
+        )
+
+    def test_builds_context_from_lexical_only_hybrid_result(self):
+        builder = RetrievalContextBuilder()
+
+        context = builder.build(
+            [
+                self._hybrid_result(
+                    chunk_id=1,
+                    text="Revenue increased significantly.",
+                )
+            ]
+        )
+
+        self.assertEqual(
+            context.evidence_chunks[0].citation_id,
+            "E1",
+        )
+        self.assertIsNone(
+            context.evidence_chunks[0].cosine_distance,
         )
 
     def _result(
@@ -77,6 +99,50 @@ class RetrievalContextBuilderTests(unittest.TestCase):
             filing=filing,
             company=company,
             cosine_distance=0.1,
+        )
+
+    def _hybrid_result(
+        self,
+        chunk_id: int,
+        text: str,
+    ) -> HybridSearchResult:
+        semantic_result = self._result(
+            chunk_id=chunk_id,
+            text=text,
+        )
+
+        return HybridSearchResult(
+            chunk=semantic_result.chunk,
+            filing=semantic_result.filing,
+            company=semantic_result.company,
+            rrf_score=1.0,
+            semantic_rank=None,
+            lexical_rank=1,
+            cosine_distance=None,
+            cosine_similarity=None,
+        )
+
+
+class QueryRequestTests(unittest.TestCase):
+    def test_defaults_to_semantic_retrieval(self):
+        request = QueryRequest(
+            question="How did revenue change?",
+        )
+
+        self.assertEqual(
+            request.retrieval_mode,
+            "semantic",
+        )
+
+    def test_accepts_hybrid_retrieval_mode(self):
+        request = QueryRequest(
+            question="How did revenue change?",
+            retrieval_mode="hybrid",
+        )
+
+        self.assertEqual(
+            request.retrieval_mode,
+            "hybrid",
         )
 
 

@@ -1,11 +1,19 @@
 from dataclasses import dataclass
+from typing import Protocol
 
 from app.llm.service import EvidenceGroundedLLM, EvidencePrompt
-from app.rag.context import EvidenceChunk, RetrievalContextBuilder
-from app.retrieval.semantic import (
-    SemanticRetriever,
-    SemanticSearchFilters,
-)
+from app.rag.context import EvidenceChunk, RetrievalContextBuilder, RetrievalResult
+from app.retrieval.semantic import SemanticSearchFilters
+
+
+class EvidenceRetriever(Protocol):
+    def search(
+        self,
+        query: str,
+        top_k: int = 5,
+        filters: SemanticSearchFilters | None = None,
+    ) -> list[RetrievalResult]:
+        ...
 
 
 @dataclass(frozen=True)
@@ -18,7 +26,7 @@ class RAGAnswer:
 class RAGAnswerService:
     def __init__(
         self,
-        retriever: SemanticRetriever,
+        retriever: EvidenceRetriever,
         context_builder: RetrievalContextBuilder,
         llm: EvidenceGroundedLLM,
     ) -> None:

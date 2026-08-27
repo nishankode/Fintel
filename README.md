@@ -46,7 +46,7 @@ Async ingestion adds `IngestionJob` rows in PostgreSQL and places job IDs onto R
 ```text
 Question
   -> query embedding
-  -> pgvector cosine search
+  -> semantic or hybrid retrieval
   -> metadata filters
   -> retrieval context
   -> grounded answer service
@@ -154,6 +154,8 @@ The retrieval layer supports:
 - hybrid retrieval using Reciprocal Rank Fusion
 
 RRF combines ranks instead of raw semantic and lexical scores, because those scores live on different scales.
+
+`POST /query` accepts `retrieval_mode` as either `semantic` or `hybrid`. The default is `semantic` for backward compatibility.
 
 ## Evaluation
 

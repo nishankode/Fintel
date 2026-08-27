@@ -7,6 +7,8 @@ from app.db.dependencies import DBDependency
 from app.embeddings.service import EmbeddingService
 from app.llm.service import build_llm_service
 from app.rag.context import RetrievalContextBuilder
+from app.retrieval.hybrid import HybridRetriever
+from app.retrieval.lexical import LexicalRetriever
 from app.rag.service import RAGAnswerService
 from app.retrieval.semantic import SemanticRetriever
 from app.schemas.query import (
@@ -42,6 +44,12 @@ def answer_query(
         db=db,
         embedding_service=embedding_service,
     )
+    if request.retrieval_mode == "hybrid":
+        retriever = HybridRetriever(
+            semantic_retriever=retriever,
+            lexical_retriever=LexicalRetriever(db),
+        )
+
     rag_service = RAGAnswerService(
         retriever=retriever,
         context_builder=RetrievalContextBuilder(),

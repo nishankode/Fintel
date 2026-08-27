@@ -53,6 +53,17 @@ class HybridRetrieverTests(unittest.TestCase):
             results[0].lexical_rank,
             1,
         )
+        self.assertEqual(
+            results[0].cosine_distance,
+            0.1,
+        )
+        self.assertAlmostEqual(
+            results[0].cosine_similarity,
+            0.9,
+        )
+        self.assertIsNone(
+            results[2].cosine_distance,
+        )
 
     def _semantic_result(
         self,

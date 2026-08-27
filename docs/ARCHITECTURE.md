@@ -86,6 +86,8 @@ POST /query
 
 `LLM_PROVIDER=extractive` keeps local development deterministic and avoids external cost. `LLM_PROVIDER=openai` uses the OpenAI Responses API with the retrieved context.
 
+The query endpoint accepts `retrieval_mode=semantic` or `retrieval_mode=hybrid`. Semantic mode returns vector-ranked evidence. Hybrid mode can also include lexical-only chunks, so citation cosine scores may be absent for those evidence items.
+
 ## Storage Flow
 
 The database stores logical storage keys, not raw filing bodies. This keeps PostgreSQL focused on relational state and search metadata.
