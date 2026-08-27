@@ -90,6 +90,12 @@ $env:DEBUG='false'
 .\.venv\Scripts\python.exe -m unittest discover -s tests
 ```
 
+Run the local verification suite:
+
+```powershell
+.\scripts\verify-local.ps1
+```
+
 Start the API locally:
 
 ```powershell
@@ -113,6 +119,12 @@ Apply migrations inside the API container:
 
 ```powershell
 docker compose run --rm api alembic upgrade head
+```
+
+Run a full Compose smoke test:
+
+```powershell
+.\scripts\compose-smoke.ps1
 ```
 
 ## Important Endpoints
