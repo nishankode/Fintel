@@ -27,6 +27,12 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     ingestion_queue_name: str = "fintel:ingestion_jobs"
 
+    llm_provider: Literal["extractive", "openai"] = "extractive"
+    openai_api_key: str | None = None
+    openai_base_url: str = "https://api.openai.com/v1"
+    openai_model: str = "gpt-5-mini"
+    openai_timeout_seconds: float = 30.0
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

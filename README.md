@@ -73,6 +73,7 @@ DATABASE_URL=postgresql+psycopg://...
 JWT_SECRET_KEY=...
 SEC_USER_AGENT=Your App your-email@example.com
 DEBUG=false
+LLM_PROVIDER=extractive
 ```
 
 Run migrations:
@@ -137,6 +138,18 @@ The evaluation layer currently supports retrieval evaluation cases with:
 - nDCG@K
 
 These metrics are the basis for later decisions about chunk size, overlap, embedding models, lexical search, hybrid retrieval, and reranking.
+
+## LLM Provider
+
+The default query service uses `LLM_PROVIDER=extractive`, which is deterministic and safe for local development. To use OpenAI for grounded answer synthesis, set:
+
+```text
+LLM_PROVIDER=openai
+OPENAI_API_KEY=...
+OPENAI_MODEL=gpt-5-mini
+```
+
+The OpenAI path calls the Responses API from the server and keeps the API key in environment configuration.
 
 ## Deployment Direction
 

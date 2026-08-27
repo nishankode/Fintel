@@ -5,7 +5,7 @@ from app.auth import CurrentUserDependency
 from app.core.settings import get_settings
 from app.db.dependencies import DBDependency
 from app.embeddings.service import EmbeddingService
-from app.llm.service import ExtractiveLLMService
+from app.llm.service import build_llm_service
 from app.rag.context import RetrievalContextBuilder
 from app.rag.service import RAGAnswerService
 from app.retrieval.semantic import SemanticRetriever
@@ -45,7 +45,7 @@ def answer_query(
     rag_service = RAGAnswerService(
         retriever=retriever,
         context_builder=RetrievalContextBuilder(),
-        llm=ExtractiveLLMService(),
+        llm=build_llm_service(settings),
     )
 
     answer = rag_service.answer(
