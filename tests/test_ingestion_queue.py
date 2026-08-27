@@ -1,5 +1,7 @@
 import unittest
 
+from redis.exceptions import TimeoutError as RedisTimeoutError
+
 from app.ingestion.queue import IngestionQueue
 
 
@@ -29,6 +31,19 @@ class IngestionQueueTests(unittest.TestCase):
             queue.dequeue(timeout_seconds=1)
         )
 
+    def test_dequeue_returns_none_when_redis_times_out(self):
+        redis_client = RedisStub(
+            raises=RedisTimeoutError("idle timeout"),
+        )
+        queue = IngestionQueue(
+            redis_client=redis_client,
+            queue_name="jobs",
+        )
+
+        self.assertIsNone(
+            queue.dequeue(timeout_seconds=1)
+        )
+
     def test_dequeue_converts_job_id_to_int(self):
         redis_client = RedisStub(
             popped=("jobs", "456"),
@@ -48,8 +63,10 @@ class RedisStub:
     def __init__(
         self,
         popped=None,
+        raises=None,
     ) -> None:
         self.popped = popped
+        self.raises = raises
         self.pushed = []
 
     def rpush(
@@ -66,6 +83,9 @@ class RedisStub:
         queue_names,
         timeout,
     ):
+        if self.raises:
+            raise self.raises
+
         return self.popped
 
 

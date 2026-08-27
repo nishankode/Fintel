@@ -1,4 +1,5 @@
 from redis import Redis
+from redis.exceptions import TimeoutError as RedisTimeoutError
 
 
 class IngestionQueue:
@@ -23,10 +24,13 @@ class IngestionQueue:
         self,
         timeout_seconds: int = 5,
     ) -> int | None:
-        item = self.redis_client.blpop(
-            [self.queue_name],
-            timeout=timeout_seconds,
-        )
+        try:
+            item = self.redis_client.blpop(
+                [self.queue_name],
+                timeout=timeout_seconds,
+            )
+        except RedisTimeoutError:
+            return None
 
         if item is None:
             return None
