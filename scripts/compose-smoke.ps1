@@ -1,5 +1,6 @@
 param(
-    [int] $TimeoutSeconds = 180
+    [int] $TimeoutSeconds = 180,
+    [string] $ProjectName = "fintel-smoke"
 )
 
 $ErrorActionPreference = "Stop"
@@ -41,19 +42,19 @@ function Invoke-Checked {
     }
 }
 
-Invoke-Checked "docker" @("compose", "build")
-Invoke-Checked "docker" @("compose", "up", "-d", "postgres", "redis")
-Invoke-Checked "docker" @("compose", "run", "--rm", "api", "alembic", "upgrade", "head")
-Invoke-Checked "docker" @("compose", "up", "-d", "api", "worker")
+Invoke-Checked "docker" @("compose", "-p", $ProjectName, "build")
+Invoke-Checked "docker" @("compose", "-p", $ProjectName, "up", "-d", "postgres", "redis")
+Invoke-Checked "docker" @("compose", "-p", $ProjectName, "run", "--rm", "api", "alembic", "upgrade", "head")
+Invoke-Checked "docker" @("compose", "-p", $ProjectName, "up", "-d", "api", "worker")
 
 try {
     Wait-ForHttp -Url "http://localhost:8000/health" -TimeoutSeconds $TimeoutSeconds
     Wait-ForHttp -Url "http://localhost:8000/health/ready" -TimeoutSeconds $TimeoutSeconds
     Wait-ForHttp -Url "http://localhost:8000/openapi.json" -TimeoutSeconds $TimeoutSeconds
 
-    Invoke-Checked "docker" @("compose", "ps")
+    Invoke-Checked "docker" @("compose", "-p", $ProjectName, "ps")
     Write-Host "Compose smoke test passed."
 }
 finally {
-    docker compose down
+    docker compose -p $ProjectName down --volumes
 }
