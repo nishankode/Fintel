@@ -217,4 +217,5 @@ Terraform for the AWS learning deployment lives in `infra/aws`. Treat it as a re
 ## Project Guides
 
 - [Architecture](docs/ARCHITECTURE.md)
+- [API walkthrough](docs/API_WALKTHROUGH.md)
 - [Deployment checklist](docs/DEPLOYMENT_CHECKLIST.md)
