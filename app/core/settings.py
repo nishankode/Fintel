@@ -1,3 +1,4 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Literal
 from functools import lru_cache
@@ -37,6 +38,24 @@ class Settings(BaseSettings):
     openai_base_url: str = "https://api.openai.com/v1"
     openai_model: str = "gpt-5-mini"
     openai_timeout_seconds: float = 30.0
+
+    @field_validator("debug", mode="before")
+    @classmethod
+    def parse_debug(
+        cls,
+        value,
+    ):
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+
+            if normalized in {
+                "release",
+                "prod",
+                "production",
+            }:
+                return False
+
+        return value
 
     model_config = SettingsConfigDict(
         env_file=".env",
