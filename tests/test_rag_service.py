@@ -9,6 +9,7 @@ from app.rag.service import RAGAnswerService
 from app.retrieval.hybrid import HybridSearchResult
 from app.retrieval.semantic import SemanticSearchResult
 from app.schemas.query import QueryRequest
+from app.schemas.retrieval import SemanticSearchFilterRequest
 
 
 class RetrievalContextBuilderTests(unittest.TestCase):
@@ -143,6 +144,26 @@ class QueryRequestTests(unittest.TestCase):
         self.assertEqual(
             request.retrieval_mode,
             "hybrid",
+        )
+
+    def test_accepts_session_scoped_retrieval_filters(self):
+        request = QueryRequest(
+            question="How did revenue change?",
+            filters=SemanticSearchFilterRequest(
+                ticker="AAPL",
+                filing_types={"10-K", "10-Q"},
+                filing_years={2024, 2025},
+            ),
+        )
+
+        self.assertEqual(request.filters.ticker, "AAPL")
+        self.assertEqual(
+            request.filters.filing_types,
+            {"10-K", "10-Q"},
+        )
+        self.assertEqual(
+            request.filters.filing_years,
+            {2024, 2025},
         )
 
 

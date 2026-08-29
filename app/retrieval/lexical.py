@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from sqlalchemy import func, select
+from sqlalchemy import extract, func, select
 from sqlalchemy.orm import Session
 
 from app.models import Chunk, Company, Filing
@@ -105,6 +105,23 @@ def _apply_filters(
     if filters.filing_type is not None:
         statement = statement.where(
             Filing.filing_type == filters.filing_type.upper()
+        )
+
+    if filters.filing_types is not None:
+        statement = statement.where(
+            Filing.filing_type.in_(
+                {
+                    filing_type.upper()
+                    for filing_type in filters.filing_types
+                }
+            )
+        )
+
+    if filters.filing_years is not None:
+        statement = statement.where(
+            extract("year", Filing.filed_at).in_(
+                filters.filing_years
+            )
         )
 
     if filters.section_key is not None:

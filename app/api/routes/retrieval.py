@@ -141,6 +141,8 @@ def _to_filters(
         company_id=filters.company_id,
         ticker=filters.ticker,
         filing_type=filters.filing_type,
+        filing_types=filters.filing_types,
+        filing_years=filters.filing_years,
         section_key=filters.section_key,
         filed_from=filters.filed_from,
         filed_to=filters.filed_to,

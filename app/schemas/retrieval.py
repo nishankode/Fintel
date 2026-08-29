@@ -7,6 +7,8 @@ class SemanticSearchFilterRequest(BaseModel):
     company_id: int | None = Field(default=None, gt=0)
     ticker: str | None = Field(default=None, min_length=1, max_length=10)
     filing_type: str | None = Field(default=None, min_length=1, max_length=20)
+    filing_types: set[str] | None = Field(default=None, min_length=1)
+    filing_years: set[int] | None = Field(default=None, min_length=1)
     section_key: str | None = Field(default=None, min_length=1, max_length=100)
     filed_from: date | None = None
     filed_to: date | None = None

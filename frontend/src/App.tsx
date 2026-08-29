@@ -9,16 +9,15 @@ import {
   LogIn,
   LogOut,
   PanelLeft,
+  Pencil,
   Play,
   Plus,
   RefreshCcw,
   Send,
-  Settings,
   Settings2,
   SquarePen,
-  X,
 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { clsx } from 'clsx'
 import './index.css'
@@ -37,12 +36,23 @@ type ChatMessage = {
   evidence?: EvidenceResult[]
 }
 
+type SessionConfig = {
+  companyId: number | null
+  companyTicker: string
+  companyName: string
+  filingTypes: string[]
+  filingYears: number[]
+  jobId: number | null
+  status: 'draft' | 'queued' | 'running' | 'completed' | 'failed'
+}
+
 type ChatSession = {
   id: string
   title: string
   createdAt: string
   updatedAt: string
   messages: ChatMessage[]
+  config?: SessionConfig
 }
 
 const CHAT_STORAGE_KEY = 'fintel_chat_sessions'
@@ -77,9 +87,9 @@ function App() {
   const queryClient = useQueryClient()
   const [token, setToken] = useState(() => getStoredToken())
   const [notice, setNotice] = useState<Notice>(null)
-  const [configureOpen, setConfigureOpen] = useState(false)
   const [sessions, setSessions] = useState<ChatSession[]>(() => loadSessions())
   const [activeSessionId, setActiveSessionId] = useState(() => loadActiveSessionId())
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null)
   const isAuthed = Boolean(token)
   const auth = useMemo(() => ({ token }), [token])
   const activeSession = sessions.find((session) => session.id === activeSessionId) ?? sessions[0]
@@ -128,18 +138,45 @@ function App() {
     const session = makeSession()
     setSessions((current) => [session, ...current])
     setActiveSessionId(session.id)
+    setEditingSessionId(session.id)
     setNotice(null)
   }
 
-  function updateActiveSession(updater: (session: ChatSession) => ChatSession) {
+  const updateSession = useCallback((sessionId: string, updater: (session: ChatSession) => ChatSession) => {
     setSessions((current) => {
-      const exists = current.some((session) => session.id === activeSession.id)
-      const source = exists ? current : [activeSession, ...current]
+      if (!current.some((session) => session.id === sessionId)) return current
 
-      return source
-        .map((session) => session.id === activeSession.id ? updater(session) : session)
+      return current
+        .map((session) => session.id === sessionId ? updater(session) : session)
         .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt))
     })
+  }, [])
+
+  const updateActiveSession = useCallback((updater: (session: ChatSession) => ChatSession) => {
+    updateSession(activeSession.id, updater)
+  }, [activeSession.id, updateSession])
+
+  const updateSetupSession = useCallback((updater: (session: ChatSession) => ChatSession) => {
+    updateSession(activeSession.id, updater)
+  }, [activeSession.id, updateSession])
+
+  const refreshCompanies = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['companies', token] })
+  }, [queryClient, token])
+
+  const refreshFilings = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['filings', token] })
+  }, [queryClient, token])
+
+  function editSession(sessionId: string) {
+    setActiveSessionId(sessionId)
+    setEditingSessionId(sessionId)
+    setNotice(null)
+  }
+
+  function finishEditingSession() {
+    setEditingSessionId(null)
+    queryClient.invalidateQueries({ queryKey: ['filings', token] })
   }
 
   if (!isAuthed) {
@@ -164,37 +201,43 @@ function App() {
           ready={healthQuery.data?.status === 'ready'}
           sessions={sessions}
           activeSessionId={activeSession.id}
-          onNewChat={createSession}
-          onSelectSession={setActiveSessionId}
-          onOpenConfigure={() => setConfigureOpen(true)}
+          onNewSession={createSession}
+          onSelectSession={(sessionId) => {
+            setActiveSessionId(sessionId)
+            setEditingSessionId(null)
+          }}
+          onEditSession={editSession}
           onRefresh={() => queryClient.invalidateQueries()}
           onSignOut={() => handleToken(null)}
         />
-        <ChatWorkspace
-          token={token}
-          session={activeSession}
-          companies={companiesQuery.data ?? []}
-          notice={notice}
-          onDismissNotice={() => setNotice(null)}
-          onError={showError}
-          onUpdateSession={updateActiveSession}
-        />
-        <ConfigurePanel
-          open={configureOpen}
-          token={token}
-          ready={healthQuery.data?.status === 'ready'}
-          companies={companiesQuery.data ?? []}
-          filings={filingsQuery.data ?? []}
-          companiesLoading={companiesQuery.isLoading}
-          filingsLoading={filingsQuery.isLoading}
-          onClose={() => setConfigureOpen(false)}
-          onError={showError}
-          onSuccess={(text) => {
-            setNotice({ kind: 'success', text })
-            queryClient.invalidateQueries({ queryKey: ['companies', token] })
-            queryClient.invalidateQueries({ queryKey: ['filings', token] })
-          }}
-        />
+        {shouldConfigureSession(activeSession, editingSessionId) ? (
+          <SessionSetup
+            token={token}
+            ready={healthQuery.data?.status === 'ready'}
+            session={activeSession}
+            companies={companiesQuery.data ?? []}
+            filings={filingsQuery.data ?? []}
+            companiesLoading={companiesQuery.isLoading}
+            filingsLoading={filingsQuery.isLoading}
+            notice={notice}
+            onDismissNotice={() => setNotice(null)}
+            onError={showError}
+            onUpdateSession={updateSetupSession}
+            onCompaniesChanged={refreshCompanies}
+            onFilingsChanged={refreshFilings}
+            onComplete={finishEditingSession}
+            onSuccess={(text) => setNotice({ kind: 'success', text })}
+          />
+        ) : (
+          <ChatWorkspace
+            token={token}
+            session={activeSession}
+            notice={notice}
+            onDismissNotice={() => setNotice(null)}
+            onError={showError}
+            onUpdateSession={updateActiveSession}
+          />
+        )}
       </div>
     </main>
   )
@@ -262,18 +305,18 @@ function Sidebar({
   ready,
   sessions,
   activeSessionId,
-  onNewChat,
+  onNewSession,
   onSelectSession,
-  onOpenConfigure,
+  onEditSession,
   onRefresh,
   onSignOut,
 }: {
   ready: boolean
   sessions: ChatSession[]
   activeSessionId: string
-  onNewChat: () => void
+  onNewSession: () => void
   onSelectSession: (id: string) => void
-  onOpenConfigure: () => void
+  onEditSession: (id: string) => void
   onRefresh: () => void
   onSignOut: () => void
 }) {
@@ -284,22 +327,40 @@ function Sidebar({
           <div className="brand-mark dark"><FileSearch size={18} aria-hidden="true" /></div>
           <div><h1>Document Copilot</h1><p>SEC filing assistant</p></div>
         </div>
-        <button className="new-chat-button" type="button" onClick={onNewChat}>
+        <button className="new-session-button" type="button" onClick={onNewSession}>
           <SquarePen size={16} aria-hidden="true" />
-          New chat
+          New session
         </button>
         <nav className="session-list" aria-label="Chat history">
           <p>Today</p>
           {sessions.map((session) => (
-            <button
-              className={clsx('session-button', session.id === activeSessionId && 'active')}
-              type="button"
+            <div
+              className={clsx('session-row', session.id === activeSessionId && 'active')}
               key={session.id}
-              onClick={() => onSelectSession(session.id)}
               title={session.title}
             >
-              {session.title}
-            </button>
+              <button
+                className="session-button"
+                type="button"
+                onClick={() => onSelectSession(session.id)}
+              >
+                <span>{session.title}</span>
+                {session.config && (
+                  <small>{session.config.companyTicker} - {session.config.filingTypes.join(', ')}</small>
+                )}
+              </button>
+              <button
+                className="session-edit-button"
+                type="button"
+                title="Edit session"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onEditSession(session.id)
+                }}
+              >
+                <Pencil size={14} aria-hidden="true" />
+              </button>
+            </div>
           ))}
         </nav>
       </div>
@@ -308,10 +369,6 @@ function Sidebar({
           <StatusPill label={ready ? 'Ready' : 'Checking'} healthy={ready} />
           <button className="icon-button" type="button" title="Refresh workspace" onClick={onRefresh}><RefreshCcw size={17} aria-hidden="true" /></button>
         </div>
-        <button className="configure-button" type="button" onClick={onOpenConfigure}>
-          <Settings size={16} aria-hidden="true" />
-          Configure
-        </button>
         <button className="account-button" type="button" onClick={onSignOut}>
           <span>DA</span>
           <span><strong>analyst@example.com</strong><small>Signed in</small></span>
@@ -322,48 +379,91 @@ function Sidebar({
   )
 }
 
-function ConfigurePanel({
-  open,
+function SessionSetup({
   token,
   ready,
+  session,
   companies,
   filings,
   companiesLoading,
   filingsLoading,
-  onClose,
+  notice,
+  onDismissNotice,
   onError,
+  onUpdateSession,
+  onCompaniesChanged,
+  onFilingsChanged,
+  onComplete,
   onSuccess,
 }: {
-  open: boolean
   token: string | null
   ready: boolean
+  session: ChatSession
   companies: Company[]
   filings: Filing[]
   companiesLoading: boolean
   filingsLoading: boolean
-  onClose: () => void
+  notice: Notice
+  onDismissNotice: () => void
   onError: (error: unknown) => void
+  onUpdateSession: (updater: (session: ChatSession) => ChatSession) => void
+  onCompaniesChanged: () => void
+  onFilingsChanged: () => void
+  onComplete: () => void
   onSuccess: (message: string) => void
 }) {
+  const selectedCompany = session.config?.companyTicker
+    ? companies.find((company) => company.ticker === session.config?.companyTicker)
+    : null
+
   return (
-    <>
-      <div className={clsx('configure-backdrop', open && 'open')} onClick={onClose} />
-      <aside className={clsx('configure-panel', open && 'open')} aria-hidden={!open}>
-        <header className="configure-header">
-          <div>
-            <p className="eyebrow">Workspace setup</p>
-            <h2>Configure corpus</h2>
-          </div>
-          <button className="icon-button" type="button" title="Close configure panel" onClick={onClose}><X size={17} aria-hidden="true" /></button>
-        </header>
-        <div className="configure-content">
-          <CorpusSummary ready={ready} companies={companies} filings={filings} />
-          <CompanySetup token={token} companies={companies} loading={companiesLoading} onError={onError} onSuccess={onSuccess} />
-          <IngestionSetup token={token} companies={companies} onError={onError} onSuccess={onSuccess} />
-          <FilingList filings={filings} loading={filingsLoading} />
+    <section className="session-setup">
+      <header className="chat-header">
+        <button className="plain-icon" type="button" title="Sidebar"><PanelLeft size={17} aria-hidden="true" /></button>
+        <div>
+          <p className="eyebrow">Session setup</p>
+          <h2>{session.config ? 'Edit session corpus' : 'Configure new session'}</h2>
         </div>
-      </aside>
-    </>
+      </header>
+      {notice && <button className={clsx('notice', notice.kind)} type="button" onClick={onDismissNotice}>{notice.text}</button>}
+      <div className="setup-content">
+        <section className="setup-intro">
+          <h1>{selectedCompany ? `${selectedCompany.ticker} filing chat` : 'Choose the corpus for this chat session'}</h1>
+          <p>
+            The session will remember its company, filing types, filing years, ingestion progress, and follow-up chat history.
+          </p>
+        </section>
+        <div className="setup-grid">
+          <div className="setup-column">
+            <CorpusSummary ready={ready} companies={companies} filings={filings} />
+            <CompanySetup
+              token={token}
+              companies={companies}
+              loading={companiesLoading}
+              onError={onError}
+              onSuccess={(message) => {
+                onSuccess(message)
+                onCompaniesChanged()
+              }}
+            />
+          </div>
+          <div className="setup-column">
+            <SessionIngestionSetup
+              key={session.id}
+              token={token}
+              session={session}
+              companies={companies}
+              onError={onError}
+              onSuccess={onSuccess}
+              onUpdateSession={onUpdateSession}
+              onFilingsChanged={onFilingsChanged}
+              onComplete={onComplete}
+            />
+            <FilingList filings={filterFilingsForSession(filings, session.config)} loading={filingsLoading} />
+          </div>
+        </div>
+      </div>
+    </section>
   )
 }
 
@@ -419,11 +519,32 @@ function CompanySetup({ token, companies, loading, onError, onSuccess }: { token
   )
 }
 
-function IngestionSetup({ token, companies, onError, onSuccess }: { token: string | null; companies: Company[]; onError: (error: unknown) => void; onSuccess: (message: string) => void }) {
-  const [ticker, setTicker] = useState('')
-  const [selectedFilingTypes, setSelectedFilingTypes] = useState<string[]>(['10-K'])
-  const [selectedYears, setSelectedYears] = useState<number[]>([new Date().getFullYear()])
-  const [jobId, setJobId] = useState<number | null>(null)
+function SessionIngestionSetup({
+  token,
+  session,
+  companies,
+  onError,
+  onSuccess,
+  onUpdateSession,
+  onFilingsChanged,
+  onComplete,
+}: {
+  token: string | null
+  session: ChatSession
+  companies: Company[]
+  onError: (error: unknown) => void
+  onSuccess: (message: string) => void
+  onUpdateSession: (updater: (session: ChatSession) => ChatSession) => void
+  onFilingsChanged: () => void
+  onComplete: () => void
+}) {
+  const config = session.config ?? makeDraftConfig(companies[0])
+  const [ticker, setTicker] = useState(config.companyTicker)
+  const [selectedFilingTypes, setSelectedFilingTypes] = useState<string[]>(config.filingTypes)
+  const [selectedYears, setSelectedYears] = useState<number[]>(config.filingYears)
+  const [jobId, setJobId] = useState<number | null>(config.jobId)
+  const selectedCompany = companies.find((company) => company.ticker === ticker)
+
   const jobQuery = useQuery({
     queryKey: ['job', token, jobId],
     queryFn: () => api.getIngestionJob(jobId!, { token }),
@@ -443,13 +564,53 @@ function IngestionSetup({ token, companies, onError, onSuccess }: { token: strin
       { token },
     ),
     onError,
-    onSuccess: (job) => { setJobId(job.id); onSuccess(`Ingestion job ${job.id} queued.`) },
+    onSuccess: (job) => {
+      setJobId(job.id)
+      onUpdateSession((current) => ({
+        ...current,
+        title: makeSessionConfigTitle(ticker, selectedFilingTypes, selectedYears),
+        updatedAt: new Date().toISOString(),
+        config: {
+          companyId: selectedCompany?.id ?? null,
+          companyTicker: ticker,
+          companyName: selectedCompany?.name ?? ticker,
+          filingTypes: selectedFilingTypes,
+          filingYears: selectedYears,
+          jobId: job.id,
+          status: job.status === 'failed' ? 'failed' : job.status === 'completed' ? 'completed' : job.status === 'running' ? 'running' : 'queued',
+        },
+      }))
+      onSuccess(`Ingestion job ${job.id} queued.`)
+    },
   })
   const canIngest = Boolean(ticker && selectedFilingTypes.length > 0 && selectedYears.length > 0 && !mutation.isPending)
+  const job = jobQuery.data ?? null
+  const canChat = session.config?.status === 'completed' || job?.status === 'completed'
+
+  useEffect(() => {
+    if (!job) return
+
+    onUpdateSession((current) => {
+      const nextStatus = job.status === 'failed' ? 'failed' : job.status === 'completed' ? 'completed' : job.status === 'running' ? 'running' : 'queued'
+      if (current.config?.jobId !== job.id || current.config.status === nextStatus) return current
+      return {
+        ...current,
+        updatedAt: new Date().toISOString(),
+        config: {
+          ...current.config,
+          status: nextStatus,
+        },
+      }
+    })
+
+    if (job.status === 'completed') {
+      onFilingsChanged()
+    }
+  }, [job, job?.status, onFilingsChanged, onUpdateSession])
 
   return (
     <section className="configure-section">
-      <SectionTitle icon={<Play size={16} aria-hidden="true" />} title="Ingestion" />
+      <SectionTitle icon={<Play size={16} aria-hidden="true" />} title="Session corpus" />
       <div className="stacked-form">
         <label>Company<select value={ticker} onChange={(event) => setTicker(event.target.value)}><option value="">Select company</option>{companies.map((company) => <option value={company.ticker} key={company.id}>{company.ticker} - {company.name}</option>)}</select></label>
         <CheckboxGroup
@@ -466,10 +627,14 @@ function IngestionSetup({ token, companies, onError, onSuccess }: { token: strin
         />
         <button className="primary-button" type="button" disabled={!canIngest} onClick={() => mutation.mutate()}>
           {mutation.isPending ? <Loader2 className="spin" size={16} aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
-          Ingest filings
+          Chunk and embed filings
+        </button>
+        <button className="secondary-button" type="button" disabled={!canChat} onClick={onComplete}>
+          <Send size={16} aria-hidden="true" />
+          Start chatting
         </button>
       </div>
-      <JobStatus job={jobQuery.data ?? null} loading={jobQuery.isFetching} />
+      <JobStatus job={job} loading={jobQuery.isFetching} />
     </section>
   )
 }
@@ -528,7 +693,6 @@ function FilingList({ filings, loading }: { filings: Filing[]; loading: boolean 
 function ChatWorkspace({
   token,
   session,
-  companies,
   notice,
   onDismissNotice,
   onError,
@@ -536,7 +700,6 @@ function ChatWorkspace({
 }: {
   token: string | null
   session: ChatSession
-  companies: Company[]
   notice: Notice
   onDismissNotice: () => void
   onError: (error: unknown) => void
@@ -544,11 +707,17 @@ function ChatWorkspace({
 }) {
   const [question, setQuestion] = useState('')
   const [mode, setMode] = useState<RetrievalMode>('hybrid')
-  const [ticker, setTicker] = useState('')
+  const filters = session.config
+    ? {
+        ticker: session.config.companyTicker,
+        filing_types: session.config.filingTypes,
+        filing_years: session.config.filingYears,
+      }
+    : undefined
   const messages = session.messages.length > 0 ? session.messages : [welcomeMessage]
   const mutation = useMutation({
-    mutationFn: ({ apiQuestion }: { prompt: string; apiQuestion: string }) =>
-      api.askQuestion({ question: apiQuestion, top_k: 5, retrieval_mode: mode, filters: ticker ? { ticker } : undefined }, { token }),
+    mutationFn: ({ apiQuestion }: { apiQuestion: string }) =>
+      api.askQuestion({ question: apiQuestion, top_k: 5, retrieval_mode: mode, filters }, { token }),
     onError,
     onSuccess: (answer) => {
       onUpdateSession((current) => ({
@@ -573,7 +742,7 @@ function ChatWorkspace({
     onDismissNotice()
     onUpdateSession((current) => ({
       ...current,
-      title: current.title === 'New chat' ? makeTitle(trimmed) : current.title,
+      title: current.title === 'New session' ? makeTitle(trimmed) : current.title,
       updatedAt: now,
       messages: [
         ...current.messages.filter((message) => message.id !== 'welcome'),
@@ -581,7 +750,7 @@ function ChatWorkspace({
       ],
     }))
     setQuestion('')
-    mutation.mutate({ prompt: trimmed, apiQuestion })
+    mutation.mutate({ apiQuestion })
   }
 
   return (
@@ -594,13 +763,10 @@ function ChatWorkspace({
             <button className={clsx(mode === 'semantic' && 'active')} type="button" onClick={() => setMode('semantic')}>Semantic</button>
             <button className={clsx(mode === 'hybrid' && 'active')} type="button" onClick={() => setMode('hybrid')}>Hybrid</button>
           </div>
-          <label className="inline-select">
+          {session.config && <div className="inline-select readonly">
             <Settings2 size={15} aria-hidden="true" />
-            <select value={ticker} onChange={(event) => setTicker(event.target.value)}>
-              <option value="">All companies</option>
-              {companies.map((company) => <option value={company.ticker} key={company.id}>{company.ticker}</option>)}
-            </select>
-          </label>
+            <span>{session.config.companyTicker} - {session.config.filingTypes.join(', ')} - {session.config.filingYears.join(', ')}</span>
+          </div>}
         </div>
       </header>
       {notice && <div className={clsx('notice', notice.kind)}>{notice.text}</div>}
@@ -705,7 +871,12 @@ function loadSessions(): ChatSession[] {
     const raw = localStorage.getItem(CHAT_STORAGE_KEY)
     if (!raw) return [makeSession()]
     const parsed = JSON.parse(raw) as ChatSession[]
-    return parsed.length > 0 ? parsed : [makeSession()]
+    const sessions = parsed.map((session) => ({
+      ...session,
+      title: session.title === 'New chat' ? 'New session' : session.title,
+      messages: session.messages ?? [],
+    }))
+    return sessions.length > 0 ? sessions : [makeSession()]
   } catch {
     return [makeSession()]
   }
@@ -719,11 +890,49 @@ function makeSession(): ChatSession {
   const now = new Date().toISOString()
   return {
     id: `session-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    title: 'New chat',
+    title: 'New session',
     createdAt: now,
     updatedAt: now,
     messages: [],
   }
+}
+
+function makeDraftConfig(company?: Company): SessionConfig {
+  return {
+    companyId: company?.id ?? null,
+    companyTicker: company?.ticker ?? '',
+    companyName: company?.name ?? '',
+    filingTypes: ['10-K'],
+    filingYears: [new Date().getFullYear()],
+    jobId: null,
+    status: 'draft',
+  }
+}
+
+function makeSessionConfigTitle(ticker: string, filingTypes: string[], filingYears: number[]) {
+  const yearLabel = filingYears.length > 2
+    ? `${Math.min(...filingYears)}-${Math.max(...filingYears)}`
+    : filingYears.join(', ')
+
+  return `${ticker} ${filingTypes.join(', ')} ${yearLabel}`.trim()
+}
+
+function shouldConfigureSession(session: ChatSession, editingSessionId: string | null) {
+  return editingSessionId === session.id || !session.config
+}
+
+function filterFilingsForSession(filings: Filing[], config?: SessionConfig) {
+  if (!config?.companyTicker) return filings
+
+  return filings.filter((filing) => {
+    const filedYear = new Date(filing.filed_at).getFullYear()
+    return (
+      (config.companyId === null || filing.company_id === config.companyId)
+      &&
+      config.filingTypes.includes(filing.filing_type)
+      && config.filingYears.includes(filedYear)
+    )
+  })
 }
 
 function makeTitle(prompt: string) {

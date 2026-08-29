@@ -20,9 +20,8 @@ test('registers, signs in, and adds a company', async ({ page }) => {
   await page.getByLabel('Password').fill('ChangeMe123!')
   await page.getByRole('button', { name: 'Sign in' }).click()
 
-  await expect(page.locator('.new-chat-button')).toBeVisible()
-  await page.getByRole('button', { name: 'Configure' }).click()
-  await expect(page.getByRole('heading', { name: 'Configure corpus' })).toBeVisible()
+  await expect(page.locator('.new-session-button')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Configure new session' })).toBeVisible()
   await expect(page.getByRole('button', { name: '10-K', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: String(new Date().getFullYear()) })).toBeVisible()
 
@@ -33,4 +32,5 @@ test('registers, signs in, and adds a company', async ({ page }) => {
 
   await expect(page.getByText(`${ticker} added to your filing corpus.`)).toBeVisible()
   await expect(page.getByRole('option', { name: `${ticker} - Test Company ${suffix}` })).toBeAttached()
+  await expect(page.getByRole('button', { name: 'Chunk and embed filings' })).toBeVisible()
 })

@@ -70,6 +70,13 @@ export type QueryResponse = {
   evidence: EvidenceResult[]
 }
 
+export type RetrievalFilters = {
+  ticker?: string
+  filing_type?: string
+  filing_types?: string[]
+  filing_years?: number[]
+}
+
 export class ApiError extends Error {
   status: number
 
@@ -180,7 +187,7 @@ export const api = {
 
   searchEvidence: (
     mode: RetrievalMode,
-    body: { query: string; top_k: number; filters?: { ticker?: string } },
+    body: { query: string; top_k: number; filters?: RetrievalFilters },
     auth: AuthContext,
   ) => jsonRequest<SearchResponse>(`/retrieval/${mode}`, body, auth),
 
@@ -189,7 +196,7 @@ export const api = {
       question: string
       top_k: number
       retrieval_mode: RetrievalMode
-      filters?: { ticker?: string }
+      filters?: RetrievalFilters
     },
     auth: AuthContext,
   ) => jsonRequest<QueryResponse>('/query', body, auth),
