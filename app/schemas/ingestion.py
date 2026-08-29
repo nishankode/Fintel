@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 
 class CompanyIngestionRequest(BaseModel):
     filing_types: set[str] | None = None
+    filing_years: set[int] | None = Field(default=None, min_length=1)
     limit: int | None = Field(default=None, gt=0)
 
 

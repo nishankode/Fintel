@@ -171,7 +171,7 @@ export const api = {
 
   createIngestionJob: (
     ticker: string,
-    body: { filing_types: string[]; limit: number },
+    body: { filing_types: string[]; filing_years?: number[]; limit?: number },
     auth: AuthContext,
   ) => jsonRequest<IngestionJob>(`/ingestion/companies/${ticker}/jobs`, body, auth),
 

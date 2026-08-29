@@ -61,6 +61,12 @@ const starterPrompts = [
   'Which business segments are most important?',
 ]
 
+const filingTypeOptions = ['10-K', '10-Q', '8-K']
+const filingYearOptions = Array.from(
+  { length: 8 },
+  (_, index) => new Date().getFullYear() - index,
+)
+
 const welcomeMessage: ChatMessage = {
   id: 'welcome',
   role: 'assistant',
@@ -415,8 +421,8 @@ function CompanySetup({ token, companies, loading, onError, onSuccess }: { token
 
 function IngestionSetup({ token, companies, onError, onSuccess }: { token: string | null; companies: Company[]; onError: (error: unknown) => void; onSuccess: (message: string) => void }) {
   const [ticker, setTicker] = useState('')
-  const [filingType, setFilingType] = useState('10-K')
-  const [limit, setLimit] = useState(1)
+  const [selectedFilingTypes, setSelectedFilingTypes] = useState<string[]>(['10-K'])
+  const [selectedYears, setSelectedYears] = useState<number[]>([new Date().getFullYear()])
   const [jobId, setJobId] = useState<number | null>(null)
   const jobQuery = useQuery({
     queryKey: ['job', token, jobId],
@@ -428,27 +434,75 @@ function IngestionSetup({ token, companies, onError, onSuccess }: { token: strin
     },
   })
   const mutation = useMutation({
-    mutationFn: () => api.createIngestionJob(ticker, { filing_types: [filingType], limit }, { token }),
+    mutationFn: () => api.createIngestionJob(
+      ticker,
+      {
+        filing_types: selectedFilingTypes,
+        filing_years: selectedYears,
+      },
+      { token },
+    ),
     onError,
     onSuccess: (job) => { setJobId(job.id); onSuccess(`Ingestion job ${job.id} queued.`) },
   })
+  const canIngest = Boolean(ticker && selectedFilingTypes.length > 0 && selectedYears.length > 0 && !mutation.isPending)
 
   return (
     <section className="configure-section">
       <SectionTitle icon={<Play size={16} aria-hidden="true" />} title="Ingestion" />
       <div className="stacked-form">
         <label>Company<select value={ticker} onChange={(event) => setTicker(event.target.value)}><option value="">Select company</option>{companies.map((company) => <option value={company.ticker} key={company.id}>{company.ticker} - {company.name}</option>)}</select></label>
-        <div className="two-col">
-          <label>Filing<select value={filingType} onChange={(event) => setFilingType(event.target.value)}><option>10-K</option><option>10-Q</option><option>8-K</option></select></label>
-          <label>Limit<input type="number" min="1" max="10" value={limit} onChange={(event) => setLimit(Number(event.target.value))} /></label>
-        </div>
-        <button className="primary-button" type="button" disabled={!ticker || mutation.isPending} onClick={() => mutation.mutate()}>
+        <CheckboxGroup
+          label="Filing types"
+          options={filingTypeOptions}
+          selected={selectedFilingTypes}
+          onToggle={(filingType) => setSelectedFilingTypes((current) => toggleValue(current, filingType))}
+        />
+        <YearCheckboxGroup
+          label="Filing years"
+          options={filingYearOptions}
+          selected={selectedYears}
+          onToggle={(year) => setSelectedYears((current) => toggleValue(current, year))}
+        />
+        <button className="primary-button" type="button" disabled={!canIngest} onClick={() => mutation.mutate()}>
           {mutation.isPending ? <Loader2 className="spin" size={16} aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
           Ingest filings
         </button>
       </div>
       <JobStatus job={jobQuery.data ?? null} loading={jobQuery.isFetching} />
     </section>
+  )
+}
+
+function CheckboxGroup({ label, options, selected, onToggle }: { label: string; options: string[]; selected: string[]; onToggle: (value: string) => void }) {
+  return (
+    <div className="check-group">
+      <span>{label}</span>
+      <div>
+        {options.map((option) => (
+          <button className={clsx('check-button', selected.includes(option) && 'selected')} type="button" key={option} onClick={() => onToggle(option)}>
+            <CheckCircle2 size={14} aria-hidden="true" />
+            {option}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function YearCheckboxGroup({ label, options, selected, onToggle }: { label: string; options: number[]; selected: number[]; onToggle: (value: number) => void }) {
+  return (
+    <div className="check-group">
+      <span>{label}</span>
+      <div>
+        {options.map((option) => (
+          <button className={clsx('check-button', selected.includes(option) && 'selected')} type="button" key={option} onClick={() => onToggle(option)}>
+            <CheckCircle2 size={14} aria-hidden="true" />
+            {option}
+          </button>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -674,6 +728,12 @@ function makeSession(): ChatSession {
 
 function makeTitle(prompt: string) {
   return prompt.length > 44 ? `${prompt.slice(0, 41)}...` : prompt
+}
+
+function toggleValue<T>(values: T[], value: T) {
+  return values.includes(value)
+    ? values.filter((current) => current !== value)
+    : [...values, value]
 }
 
 function buildContextualQuestion(prompt: string, priorMessages: ChatMessage[]) {

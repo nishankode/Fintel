@@ -18,12 +18,18 @@ class IngestionJobService:
         self,
         company: Company,
         filing_types: set[str] | None = None,
+        filing_years: set[int] | None = None,
         limit: int | None = None,
     ) -> IngestionJob:
         payload: dict[str, Any] = {
             "filing_types": (
                 sorted(filing_types)
                 if filing_types
+                else None
+            ),
+            "filing_years": (
+                sorted(filing_years)
+                if filing_years
                 else None
             ),
             "limit": limit,

@@ -24,12 +24,14 @@ class SECFilingPersistenceService:
         self,
         company: Company,
         filing_types: set[str] | None = None,
+        filing_years: set[int] | None = None,
     ) -> list[Filing]:
 
         discovered_filings = (
             self.discovery_service.get_recent_filings(
                 cik=company.cik,
                 filing_types=filing_types,
+                filing_years=filing_years,
             )
         )
 

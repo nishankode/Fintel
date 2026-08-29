@@ -2,7 +2,7 @@ import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from sqlalchemy import select
+from sqlalchemy import extract, select
 from sqlalchemy.orm import Session
 
 from app.ingestion.chunks import FilingChunkService
@@ -136,6 +136,7 @@ class CompanyIngestionPipeline:
         self,
         company: Company,
         filing_types: set[str] | None = None,
+        filing_years: set[int] | None = None,
         limit: int | None = None,
         progress_callback: Callable[[int, int, str], None] | None = None,
     ) -> CompanyIngestionResult:
@@ -143,6 +144,7 @@ class CompanyIngestionPipeline:
             self.filing_persistence_service.sync_company_filings(
                 company=company,
                 filing_types=filing_types,
+                filing_years=filing_years,
             )
         )
 
@@ -162,6 +164,11 @@ class CompanyIngestionPipeline:
             }
             query = query.where(
                 Filing.filing_type.in_(normalized_types)
+            )
+
+        if filing_years:
+            query = query.where(
+                extract("year", Filing.filed_at).in_(filing_years)
             )
 
         if limit is not None:

@@ -19,6 +19,7 @@ class IngestionJobServiceTests(unittest.TestCase):
         job = service.create_company_filings_job(
             company=company,
             filing_types={"10-Q", "10-K"},
+            filing_years={2025, 2024},
             limit=2,
         )
 
@@ -29,6 +30,7 @@ class IngestionJobServiceTests(unittest.TestCase):
             job.payload,
             {
                 "filing_types": ["10-K", "10-Q"],
+                "filing_years": [2024, 2025],
                 "limit": 2,
             },
         )

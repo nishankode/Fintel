@@ -122,6 +122,12 @@ class IngestionWorker:
             if filing_types_payload
             else None
         )
+        filing_years_payload = payload.get("filing_years")
+        filing_years = (
+            set(filing_years_payload)
+            if filing_years_payload
+            else None
+        )
 
         settings = get_settings()
         sec_client = SECClient()
@@ -177,6 +183,7 @@ class IngestionWorker:
             company_ingestion_pipeline.ingest_company(
                 company=company,
                 filing_types=filing_types,
+                filing_years=filing_years,
                 limit=payload.get("limit"),
                 progress_callback=(
                     lambda current, total, message: IngestionJobService(

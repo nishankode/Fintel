@@ -12,7 +12,8 @@ class SECDiscoveryService:
     def get_recent_filings(
         self,
         cik: str,
-        filing_types: set[str] | None = None
+        filing_types: set[str] | None = None,
+        filing_years: set[int] | None = None,
     ) -> list[SECFilingMetadata]:
 
         submissions = self.client.get_company_submissions(cik)
@@ -41,6 +42,11 @@ class SECDiscoveryService:
             if (normalized_types is not None and filing_type not in normalized_types):
                 continue
 
+            filed_at = date.fromisoformat(filing_dates[index])
+
+            if filing_years is not None and filed_at.year not in filing_years:
+                continue
+
             report_date = (
                 date.fromisoformat(report_dates[index])
                 if report_dates[index]
@@ -50,7 +56,7 @@ class SECDiscoveryService:
             filing = SECFilingMetadata(
                 accession_number=accession_numbers[index],
                 filing_type=filing_type,
-                filed_at=date.fromisoformat(filing_dates[index]),
+                filed_at=filed_at,
                 reporting_period=report_date,
                 primary_document=primary_documents[index]
             )

@@ -1,6 +1,6 @@
 # Fintel Frontend
 
-React/Vite Document Copilot UI for the Fintel FastAPI backend. The app combines chat history, company setup, filing ingestion, and cited filing Q&A in one local interface.
+React/Vite Document Copilot UI for the Fintel FastAPI backend. The app combines chat history, company setup, filing-type/year-based ingestion, and cited filing Q&A in one local interface.
 
 ## Local Development
 

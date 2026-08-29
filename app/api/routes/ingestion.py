@@ -114,6 +114,7 @@ def ingest_company_filings(
         result = company_ingestion_pipeline.ingest_company(
             company=company,
             filing_types=request.filing_types,
+            filing_years=request.filing_years,
             limit=request.limit,
         )
     finally:
@@ -157,6 +158,7 @@ def enqueue_company_ingestion(
     job = job_service.create_company_filings_job(
         company=company,
         filing_types=request.filing_types,
+        filing_years=request.filing_years,
         limit=request.limit,
     )
     redis_client = Redis.from_url(

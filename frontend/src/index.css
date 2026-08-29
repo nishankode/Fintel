@@ -591,6 +591,52 @@ textarea:focus {
   gap: 10px;
 }
 
+.check-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.check-group > span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.check-group > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.check-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  background: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.check-button svg {
+  color: var(--border-strong);
+}
+
+.check-button.selected {
+  color: #ffffff;
+  background: #111111;
+  border-color: #111111;
+}
+
+.check-button.selected svg {
+  color: #ffffff;
+}
+
 .compact-list {
   display: flex;
   flex-direction: column;

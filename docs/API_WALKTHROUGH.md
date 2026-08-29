@@ -38,7 +38,7 @@ cd frontend
 npm run test:e2e
 ```
 
-The UI keeps chat history in the left sidebar and places corpus setup behind the bottom Configure button. Once filings are indexed, ask questions in the main chat area; each answer includes citations back to the retrieved filing chunks, and follow-up questions stay inside the same chat session.
+The UI keeps chat history in the left sidebar and places corpus setup behind the bottom Configure button. Configure lets you select one or more filing types and one or more filing years, then queues ingestion for matching SEC filings. Once filings are indexed, ask questions in the main chat area; each answer includes citations back to the retrieved filing chunks, and follow-up questions stay inside the same chat session.
 
 ## 2. Create A User
 
@@ -87,7 +87,7 @@ Companies are the local starting point for ingestion. The SEC integration discov
 curl -X POST http://localhost:8000/ingestion/companies/AAPL/jobs `
   -H "Authorization: Bearer $token" `
   -H "Content-Type: application/json" `
-  -d "{\"filing_types\":[\"10-K\"],\"limit\":1}"
+  -d "{\"filing_types\":[\"10-K\",\"10-Q\"],\"filing_years\":[2024,2025]}"
 ```
 
 This creates an `ingestion_jobs` row and pushes the job ID to Redis. The worker performs the slow work outside the API request.

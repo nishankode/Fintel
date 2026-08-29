@@ -7,15 +7,13 @@ test('registers, signs in, and adds a company', async ({ page }) => {
 
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'Document Copilot' })).toBeVisible()
-  await expect(page.getByText('Ready')).toBeVisible({
-    timeout: 15000,
-  })
 
   await page.getByRole('button', { name: 'Register' }).click()
   await page.getByLabel('Username').fill(username)
   await page.getByLabel('Email').fill(`${username}@example.com`)
   await page.getByLabel('Password').fill('ChangeMe123!')
   await page.getByRole('button', { name: 'Create user' }).click()
+  await expect(page.getByLabel('Email')).toBeHidden()
 
   await page.getByRole('button', { name: 'Login' }).click()
   await page.getByLabel('Username').fill(username)
@@ -25,6 +23,8 @@ test('registers, signs in, and adds a company', async ({ page }) => {
   await expect(page.locator('.new-chat-button')).toBeVisible()
   await page.getByRole('button', { name: 'Configure' }).click()
   await expect(page.getByRole('heading', { name: 'Configure corpus' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '10-K', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: String(new Date().getFullYear()) })).toBeVisible()
 
   await page.getByLabel('Ticker').fill(ticker)
   await page.getByLabel('CIK').fill(suffix.padStart(10, '0'))
