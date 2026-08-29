@@ -59,6 +59,7 @@ Question
 
 - Raw SEC HTML is stored outside PostgreSQL; the database stores logical `storage_key` references.
 - Chunk embeddings are generated during ingestion, not query time, so retrieval stays low-latency.
+- Embedding generation batches chunks in larger groups and can be tuned with `EMBEDDING_BATCH_SIZE` and `EMBEDDING_CPU_THREADS`.
 - Embedding persistence is idempotent: reruns only process chunks where `embedding IS NULL`.
 - A filing is marked `indexed` only after vectors are persisted.
 - Redis is not permanent state. Failed/running/completed job state lives in PostgreSQL.
@@ -75,7 +76,10 @@ SEC_USER_AGENT=Your App your-email@example.com
 DEBUG=false
 DOCUMENT_STORAGE_PROVIDER=local
 LLM_PROVIDER=extractive
+EMBEDDING_BATCH_SIZE=128
 ```
+
+For local CPU ingestion, `EMBEDDING_BATCH_SIZE=128` is the default. If your machine has spare cores, set `EMBEDDING_CPU_THREADS` to a small positive number such as `4` or `8`, then restart the API and worker containers.
 
 Run migrations:
 

@@ -52,6 +52,10 @@ locals {
       value = "cpu"
     },
     {
+      name  = "EMBEDDING_BATCH_SIZE"
+      value = "128"
+    },
+    {
       name  = "REDIS_URL"
       value = local.redis_url
     },

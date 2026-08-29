@@ -29,6 +29,8 @@ class Settings(BaseSettings):
     embedding_model_name: str = "BAAI/bge-small-en-v1.5"
     embedding_dimension: int = 384
     embedding_device: str = "cpu"
+    embedding_batch_size: int = 128
+    embedding_cpu_threads: int | None = None
 
     redis_url: str = "redis://localhost:6379/0"
     ingestion_queue_name: str = "fintel:ingestion_jobs"
@@ -61,6 +63,17 @@ class Settings(BaseSettings):
                 "production",
             }:
                 return False
+
+        return value
+
+    @field_validator("embedding_cpu_threads", mode="before")
+    @classmethod
+    def parse_optional_positive_int(
+        cls,
+        value,
+    ):
+        if value == "":
+            return None
 
         return value
 

@@ -38,7 +38,7 @@ cd frontend
 npm run test:e2e
 ```
 
-The UI keeps chat history in the left sidebar and places corpus setup behind the bottom Configure button. Configure lets you select one or more filing types and one or more filing years, then queues ingestion for matching SEC filings. Once filings are indexed, ask questions in the main chat area; each answer includes citations back to the retrieved filing chunks, and follow-up questions stay inside the same chat session.
+The UI keeps chat sessions in the left sidebar. A new session opens a corpus setup screen where you choose the company, one or more filing types, and one or more filing years. The ingestion job chunks and embeds matching SEC filings, shows percentage progress, and then unlocks the cited chat screen. Follow-up questions stay inside the same configured session.
 
 ## 2. Create A User
 
@@ -91,6 +91,8 @@ curl -X POST http://localhost:8000/ingestion/companies/AAPL/jobs `
 ```
 
 This creates an `ingestion_jobs` row and pushes the job ID to Redis. The worker performs the slow work outside the API request.
+
+Embedding throughput is controlled by `EMBEDDING_BATCH_SIZE` and `EMBEDDING_CPU_THREADS`. The default batch size is `128`; on a local CPU-only machine, try `EMBEDDING_CPU_THREADS=4` or `8` if ingestion is still too slow.
 
 ## 6. Poll Job Status
 

@@ -138,6 +138,8 @@ class IngestionWorker:
                 model_name=settings.embedding_model_name,
                 expected_dimension=settings.embedding_dimension,
                 device=settings.embedding_device,
+                document_batch_size=settings.embedding_batch_size,
+                cpu_threads=settings.embedding_cpu_threads,
             )
             discovery_service = SECDiscoveryService(
                 client=sec_client,
@@ -166,6 +168,7 @@ class IngestionWorker:
                 chunk_embedding_service=ChunkEmbeddingService(
                     db=db,
                     embedding_service=embedding_service,
+                    batch_size=settings.embedding_batch_size,
                 ),
             )
             company_ingestion_pipeline = (

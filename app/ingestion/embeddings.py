@@ -1,4 +1,5 @@
 import logging
+from time import perf_counter
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -71,6 +72,7 @@ class ChunkEmbeddingService:
             len(chunks),
             self.batch_size,
         ):
+            started_at = perf_counter()
             batch = chunks[
                 start : start + self.batch_size
             ]
@@ -112,10 +114,13 @@ class ChunkEmbeddingService:
 
             logger.info(
                 "Embedding batch stored: "
-                "filing_id=%s embedded=%s total=%s",
+                "filing_id=%s embedded=%s total=%s "
+                "batch_size=%s elapsed_seconds=%.2f",
                 filing.id,
                 embedded_count,
                 len(chunks),
+                len(batch),
+                perf_counter() - started_at,
             )
 
         filing.status = "indexed"

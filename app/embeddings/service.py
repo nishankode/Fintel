@@ -1,4 +1,5 @@
 from langchain_huggingface import HuggingFaceEmbeddings
+import torch
 
 
 BGE_QUERY_INSTRUCTION = (
@@ -12,8 +13,14 @@ class EmbeddingService:
         model_name: str,
         expected_dimension: int,
         device: str = "cpu",
+        document_batch_size: int = 128,
+        cpu_threads: int | None = None,
     ) -> None:
         self.expected_dimension = expected_dimension
+        self.document_batch_size = document_batch_size
+
+        if cpu_threads is not None and cpu_threads > 0:
+            torch.set_num_threads(cpu_threads)
 
         self.model = HuggingFaceEmbeddings(
             model_name=model_name,
@@ -21,6 +28,7 @@ class EmbeddingService:
                 "device": device,
             },
             encode_kwargs={
+                "batch_size": document_batch_size,
                 "normalize_embeddings": True,
             },
             query_encode_kwargs={

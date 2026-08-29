@@ -41,6 +41,8 @@ def semantic_search(
         model_name=settings.embedding_model_name,
         expected_dimension=settings.embedding_dimension,
         device=settings.embedding_device,
+        document_batch_size=settings.embedding_batch_size,
+        cpu_threads=settings.embedding_cpu_threads,
     )
     retriever = SemanticRetriever(
         db=db,
@@ -91,6 +93,8 @@ def hybrid_search(
         model_name=settings.embedding_model_name,
         expected_dimension=settings.embedding_dimension,
         device=settings.embedding_device,
+        document_batch_size=settings.embedding_batch_size,
+        cpu_threads=settings.embedding_cpu_threads,
     )
     semantic_retriever = SemanticRetriever(
         db=db,
