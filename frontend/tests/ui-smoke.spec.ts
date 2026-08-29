@@ -22,7 +22,7 @@ test('registers, signs in, and adds a company', async ({ page }) => {
   await page.getByLabel('Password').fill('ChangeMe123!')
   await page.getByRole('button', { name: 'Sign in' }).click()
 
-  await expect(page.getByRole('button', { name: 'New chat' })).toBeVisible()
+  await expect(page.locator('.new-chat-button')).toBeVisible()
   await page.getByRole('button', { name: 'Configure' }).click()
   await expect(page.getByRole('heading', { name: 'Configure corpus' })).toBeVisible()
 
@@ -32,5 +32,5 @@ test('registers, signs in, and adds a company', async ({ page }) => {
   await page.getByRole('button', { name: 'Add company' }).click()
 
   await expect(page.getByText(`${ticker} added to your filing corpus.`)).toBeVisible()
-  await expect(page.locator('.compact-row').filter({ hasText: `Test Company ${suffix}` })).toBeVisible()
+  await expect(page.getByRole('option', { name: `${ticker} - Test Company ${suffix}` })).toBeAttached()
 })
