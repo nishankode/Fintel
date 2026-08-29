@@ -25,7 +25,7 @@ curl http://localhost:8000/health
 curl http://localhost:8000/health/ready
 ```
 
-The local research chat UI runs at:
+The local Document Copilot UI runs at:
 
 ```text
 http://localhost:5173
@@ -38,7 +38,7 @@ cd frontend
 npm run test:e2e
 ```
 
-The UI keeps corpus setup and filing ingestion in the left sidebar. Once filings are indexed, ask questions in the main chat area; each answer includes citations back to the retrieved filing chunks.
+The UI keeps chat history in the left sidebar and places corpus setup behind the bottom Configure button. Once filings are indexed, ask questions in the main chat area; each answer includes citations back to the retrieved filing chunks, and follow-up questions stay inside the same chat session.
 
 ## 2. Create A User
 

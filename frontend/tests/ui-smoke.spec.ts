@@ -6,7 +6,7 @@ test('registers, signs in, and adds a company', async ({ page }) => {
   const ticker = `T${suffix.slice(-5)}`
 
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'Fintel' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Document Copilot' })).toBeVisible()
   await expect(page.getByText('Ready')).toBeVisible({
     timeout: 15000,
   })
@@ -22,7 +22,9 @@ test('registers, signs in, and adds a company', async ({ page }) => {
   await page.getByLabel('Password').fill('ChangeMe123!')
   await page.getByRole('button', { name: 'Sign in' }).click()
 
-  await expect(page.getByRole('heading', { name: 'Ask filings questions' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'New chat' })).toBeVisible()
+  await page.getByRole('button', { name: 'Configure' }).click()
+  await expect(page.getByRole('heading', { name: 'Configure corpus' })).toBeVisible()
 
   await page.getByLabel('Ticker').fill(ticker)
   await page.getByLabel('CIK').fill(suffix.padStart(10, '0'))
