@@ -81,6 +81,13 @@ curl -X POST http://localhost:8000/companies `
 
 Companies are the local starting point for ingestion. The SEC integration discovers filings from the CIK/ticker metadata.
 
+To remove a company and its related local filings, chunks, embeddings, and ingestion jobs:
+
+```powershell
+curl -X DELETE http://localhost:8000/companies/AAPL `
+  -H "Authorization: Bearer $token"
+```
+
 ## 5. Queue Filing Ingestion
 
 ```powershell

@@ -147,6 +147,7 @@ http://localhost:5173
 - `GET /auth/me`
 - `POST /companies`
 - `GET /companies`
+- `DELETE /companies/{ticker}`
 - `POST /filings`
 - `GET /filings`
 - `POST /ingestion/companies/{ticker}`

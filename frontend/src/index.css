@@ -249,7 +249,7 @@ h2 {
 
 .session-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 30px;
+  grid-template-columns: minmax(0, 1fr) 30px 30px;
   align-items: center;
   width: 100%;
   margin-bottom: 4px;
@@ -292,7 +292,9 @@ h2 {
   font-size: 11px;
 }
 
-.session-edit-button {
+.session-edit-button,
+.session-delete-button,
+.row-icon-button {
   display: grid;
   width: 26px;
   height: 26px;
@@ -305,13 +307,22 @@ h2 {
 }
 
 .session-row:hover .session-edit-button,
+.session-row:hover .session-delete-button,
+.session-row:focus-within .session-delete-button,
 .session-row:focus-within .session-edit-button {
   opacity: 1;
 }
 
-.session-edit-button:hover {
+.session-edit-button:hover,
+.session-delete-button:hover,
+.row-icon-button:hover {
   color: var(--text);
   background: #ffffff;
+}
+
+.session-delete-button:hover,
+.row-icon-button:hover {
+  color: var(--error);
 }
 
 .sidebar-bottom {
@@ -721,6 +732,15 @@ textarea:focus {
 .filing-row {
   display: grid;
   grid-template-columns: 48px minmax(0, 1fr) 74px;
+}
+
+.company-row {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 30px;
+}
+
+.row-icon-button {
+  opacity: 1;
 }
 
 .job-status {

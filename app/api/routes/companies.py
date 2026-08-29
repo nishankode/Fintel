@@ -102,3 +102,31 @@ def get_company(
         )
 
     return company
+
+
+@router.delete("/{ticker}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_company(
+    ticker: str,
+    db: DBDependency,
+    current_user: CurrentUserDependency
+):
+    company = db.scalar(
+        select(Company).where(
+            Company.ticker == ticker.upper()
+        )
+    )
+
+    if company is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Company not found"
+        )
+
+    db.delete(company)
+    db.commit()
+
+    logger.info(
+        "Company deleted successfully: company_id=%s user_id=%s",
+        company.id,
+        current_user.id
+    )

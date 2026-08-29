@@ -174,6 +174,9 @@ export const api = {
   createCompany: (body: { ticker: string; cik: string; name: string }, auth: AuthContext) =>
     jsonRequest<Company>('/companies', body, auth),
 
+  deleteCompany: (ticker: string, auth: AuthContext) =>
+    request<void>(`/companies/${ticker}`, { method: 'DELETE' }, auth),
+
   listFilings: (auth: AuthContext) => request<Filing[]>('/filings', {}, auth),
 
   createIngestionJob: (

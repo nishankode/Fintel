@@ -16,6 +16,7 @@ import {
   Send,
   Settings2,
   SquarePen,
+  Trash2,
 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -142,6 +143,34 @@ function App() {
     setNotice(null)
   }
 
+  function deleteSession(sessionId: string) {
+    const session = sessions.find((current) => current.id === sessionId)
+    if (!session) return
+
+    if (!window.confirm(`Delete session "${session.title}"?`)) return
+
+    const remainingSessions = sessions.filter((current) => current.id !== sessionId)
+    const nextSessions = remainingSessions.length > 0 ? remainingSessions : [makeSession()]
+    setSessions(nextSessions)
+    if (activeSession.id === sessionId) {
+      setActiveSessionId(nextSessions[0].id)
+      setEditingSessionId(!nextSessions[0].config ? nextSessions[0].id : null)
+    }
+    setNotice({ kind: 'success', text: 'Session deleted.' })
+  }
+
+  function handleCompanyDeleted(company: Company) {
+    const remainingSessions = sessions.filter((session) => !isSessionForCompany(session, company))
+    const nextSessions = remainingSessions.length > 0 ? remainingSessions : [makeSession()]
+    const nextActiveSession = nextSessions.find((session) => session.id === activeSession.id) ?? nextSessions[0]
+
+    setSessions(nextSessions)
+    setActiveSessionId(nextActiveSession.id)
+    setEditingSessionId(!nextActiveSession.config ? nextActiveSession.id : null)
+    refreshCompanies()
+    refreshFilings()
+  }
+
   const updateSession = useCallback((sessionId: string, updater: (session: ChatSession) => ChatSession) => {
     setSessions((current) => {
       if (!current.some((session) => session.id === sessionId)) return current
@@ -207,6 +236,7 @@ function App() {
             setEditingSessionId(null)
           }}
           onEditSession={editSession}
+          onDeleteSession={deleteSession}
           onRefresh={() => queryClient.invalidateQueries()}
           onSignOut={() => handleToken(null)}
         />
@@ -227,6 +257,7 @@ function App() {
             onFilingsChanged={refreshFilings}
             onComplete={finishEditingSession}
             onSuccess={(text) => setNotice({ kind: 'success', text })}
+            onCompanyDeleted={handleCompanyDeleted}
           />
         ) : (
           <ChatWorkspace
@@ -308,6 +339,7 @@ function Sidebar({
   onNewSession,
   onSelectSession,
   onEditSession,
+  onDeleteSession,
   onRefresh,
   onSignOut,
 }: {
@@ -317,6 +349,7 @@ function Sidebar({
   onNewSession: () => void
   onSelectSession: (id: string) => void
   onEditSession: (id: string) => void
+  onDeleteSession: (id: string) => void
   onRefresh: () => void
   onSignOut: () => void
 }) {
@@ -360,6 +393,17 @@ function Sidebar({
               >
                 <Pencil size={14} aria-hidden="true" />
               </button>
+              <button
+                className="session-delete-button"
+                type="button"
+                title="Delete session"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onDeleteSession(session.id)
+                }}
+              >
+                <Trash2 size={14} aria-hidden="true" />
+              </button>
             </div>
           ))}
         </nav>
@@ -395,6 +439,7 @@ function SessionSetup({
   onFilingsChanged,
   onComplete,
   onSuccess,
+  onCompanyDeleted,
 }: {
   token: string | null
   ready: boolean
@@ -411,6 +456,7 @@ function SessionSetup({
   onFilingsChanged: () => void
   onComplete: () => void
   onSuccess: (message: string) => void
+  onCompanyDeleted: (company: Company) => void
 }) {
   const selectedCompany = session.config?.companyTicker
     ? companies.find((company) => company.ticker === session.config?.companyTicker)
@@ -441,6 +487,7 @@ function SessionSetup({
               companies={companies}
               loading={companiesLoading}
               onError={onError}
+              onDeleted={onCompanyDeleted}
               onSuccess={(message) => {
                 onSuccess(message)
                 onCompaniesChanged()
@@ -481,7 +528,21 @@ function CorpusSummary({ ready, companies, filings }: { ready: boolean; companie
   )
 }
 
-function CompanySetup({ token, companies, loading, onError, onSuccess }: { token: string | null; companies: Company[]; loading: boolean; onError: (error: unknown) => void; onSuccess: (message: string) => void }) {
+function CompanySetup({
+  token,
+  companies,
+  loading,
+  onError,
+  onDeleted,
+  onSuccess,
+}: {
+  token: string | null
+  companies: Company[]
+  loading: boolean
+  onError: (error: unknown) => void
+  onDeleted: (company: Company) => void
+  onSuccess: (message: string) => void
+}) {
   const [ticker, setTicker] = useState('AAPL')
   const [cik, setCik] = useState('0000320193')
   const [name, setName] = useState('Apple Inc.')
@@ -489,6 +550,14 @@ function CompanySetup({ token, companies, loading, onError, onSuccess }: { token
     mutationFn: () => api.createCompany({ ticker, cik, name }, { token }),
     onError,
     onSuccess: (company) => onSuccess(`${company.ticker} added to your filing corpus.`),
+  })
+  const deleteMutation = useMutation({
+    mutationFn: (company: Company) => api.deleteCompany(company.ticker, { token }),
+    onError,
+    onSuccess: (_response, company) => {
+      onDeleted(company)
+      onSuccess(`${company.ticker} deleted from your filing corpus.`)
+    },
   })
 
   return (
@@ -511,8 +580,24 @@ function CompanySetup({ token, companies, loading, onError, onSuccess }: { token
       <div className="compact-list">
         {loading && <EmptyState text="Loading companies..." />}
         {!loading && companies.length === 0 && <EmptyState text="No companies yet." />}
-        {companies.slice(0, 5).map((company) => (
-          <div className="compact-row" key={company.id}><strong>{company.ticker}</strong><span>{company.name}</span></div>
+        {companies.map((company) => (
+          <div className="compact-row company-row" key={company.id}>
+            <strong>{company.ticker}</strong>
+            <span>{company.name}</span>
+            <button
+              className="row-icon-button"
+              type="button"
+              title={`Delete ${company.ticker}`}
+              disabled={deleteMutation.isPending}
+              onClick={() => {
+                if (window.confirm(`Delete ${company.ticker} and all indexed filings for it?`)) {
+                  deleteMutation.mutate(company)
+                }
+              }}
+            >
+              <Trash2 size={14} aria-hidden="true" />
+            </button>
+          </div>
         ))}
       </div>
     </section>
@@ -945,6 +1030,13 @@ function filterFilingsForSession(filings: Filing[], config?: SessionConfig) {
       && config.filingYears.includes(filedYear)
     )
   })
+}
+
+function isSessionForCompany(session: ChatSession, company: Company) {
+  return (
+    session.config?.companyId === company.id
+    || session.config?.companyTicker === company.ticker
+  )
 }
 
 function makeTitle(prompt: string) {

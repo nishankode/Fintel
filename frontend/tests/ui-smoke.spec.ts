@@ -33,6 +33,13 @@ test('registers, signs in, and adds a company', async ({ page }) => {
   await expect(page.getByText(`${ticker} added to your filing corpus.`)).toBeVisible()
   await expect(page.getByRole('option', { name: `${ticker} - Test Company ${suffix}` })).toBeAttached()
   await expect(page.getByRole('button', { name: 'Chunk and embed filings' })).toBeVisible()
+
+  page.once('dialog', async (dialog) => {
+    expect(dialog.message()).toContain(`Delete ${ticker}`)
+    await dialog.accept()
+  })
+  await page.getByRole('button', { name: `Delete ${ticker}` }).click()
+  await expect(page.getByText(`${ticker} deleted from your filing corpus.`)).toBeVisible()
 })
 
 test('submits chat with enter and keeps composer anchored', async ({ page }) => {
@@ -106,4 +113,11 @@ test('submits chat with enter and keeps composer anchored', async ({ page }) => 
   expect(before).not.toBeNull()
   expect(after).not.toBeNull()
   expect(Math.abs(after!.y - before!.y)).toBeLessThan(4)
+
+  page.once('dialog', async (dialog) => {
+    expect(dialog.message()).toContain('Delete session')
+    await dialog.accept()
+  })
+  await page.getByRole('button', { name: 'Delete session' }).click()
+  await expect(page.getByRole('heading', { name: 'Configure new session' })).toBeVisible()
 })
