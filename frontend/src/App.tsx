@@ -30,6 +30,13 @@ type Notice = {
   text: string
 } | null
 
+type Confirmation = {
+  title: string
+  message: string
+  confirmLabel: string
+  onConfirm: () => void
+} | null
+
 type ChatMessage = {
   id: string
   role: 'user' | 'assistant'
@@ -88,6 +95,7 @@ function App() {
   const queryClient = useQueryClient()
   const [token, setToken] = useState(() => getStoredToken())
   const [notice, setNotice] = useState<Notice>(null)
+  const [confirmation, setConfirmation] = useState<Confirmation>(null)
   const [sessions, setSessions] = useState<ChatSession[]>(() => loadSessions())
   const [activeSessionId, setActiveSessionId] = useState(() => loadActiveSessionId())
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null)
@@ -120,6 +128,14 @@ function App() {
     queryFn: () => api.listFilings(auth),
     enabled: isAuthed,
   })
+  const deleteCompanyMutation = useMutation({
+    mutationFn: (company: Company) => api.deleteCompany(company.ticker, { token }),
+    onError: showError,
+    onSuccess: (_response, company) => {
+      handleCompanyDeleted(company)
+      setNotice({ kind: 'success', text: `${company.ticker} deleted from your filing corpus.` })
+    },
+  })
 
   function showError(error: unknown) {
     setNotice({
@@ -143,12 +159,19 @@ function App() {
     setNotice(null)
   }
 
-  function deleteSession(sessionId: string) {
+  function requestDeleteSession(sessionId: string) {
     const session = sessions.find((current) => current.id === sessionId)
     if (!session) return
 
-    if (!window.confirm(`Delete session "${session.title}"?`)) return
+    setConfirmation({
+      title: 'Delete session',
+      message: `Delete "${session.title}"? This removes the local chat history for this session.`,
+      confirmLabel: 'Delete',
+      onConfirm: () => deleteSession(sessionId),
+    })
+  }
 
+  function deleteSession(sessionId: string) {
     const remainingSessions = sessions.filter((current) => current.id !== sessionId)
     const nextSessions = remainingSessions.length > 0 ? remainingSessions : [makeSession()]
     setSessions(nextSessions)
@@ -157,6 +180,15 @@ function App() {
       setEditingSessionId(!nextSessions[0].config ? nextSessions[0].id : null)
     }
     setNotice({ kind: 'success', text: 'Session deleted.' })
+  }
+
+  function requestDeleteCompany(company: Company) {
+    setConfirmation({
+      title: `Delete ${company.ticker}`,
+      message: `Delete ${company.name} and all local filings, chunks, embeddings, and ingestion jobs for it?`,
+      confirmLabel: 'Delete company',
+      onConfirm: () => deleteCompanyMutation.mutate(company),
+    })
   }
 
   function handleCompanyDeleted(company: Company) {
@@ -236,7 +268,7 @@ function App() {
             setEditingSessionId(null)
           }}
           onEditSession={editSession}
-          onDeleteSession={deleteSession}
+          onDeleteSession={requestDeleteSession}
           onRefresh={() => queryClient.invalidateQueries()}
           onSignOut={() => handleToken(null)}
         />
@@ -257,7 +289,7 @@ function App() {
             onFilingsChanged={refreshFilings}
             onComplete={finishEditingSession}
             onSuccess={(text) => setNotice({ kind: 'success', text })}
-            onCompanyDeleted={handleCompanyDeleted}
+            onDeleteCompany={requestDeleteCompany}
           />
         ) : (
           <ChatWorkspace
@@ -269,6 +301,14 @@ function App() {
             onUpdateSession={updateActiveSession}
           />
         )}
+        <ConfirmDialog
+          confirmation={confirmation}
+          onCancel={() => setConfirmation(null)}
+          onConfirm={() => {
+            confirmation?.onConfirm()
+            setConfirmation(null)
+          }}
+        />
       </div>
     </main>
   )
@@ -329,6 +369,42 @@ function AuthPanel({ ready, onAuthenticated, onError }: { ready: boolean; onAuth
         </button>
       </form>
     </section>
+  )
+}
+
+function ConfirmDialog({
+  confirmation,
+  onCancel,
+  onConfirm,
+}: {
+  confirmation: Confirmation
+  onCancel: () => void
+  onConfirm: () => void
+}) {
+  if (!confirmation) return null
+
+  return (
+    <div className="confirm-backdrop" role="presentation" onClick={onCancel}>
+      <section
+        aria-labelledby="confirm-title"
+        aria-modal="true"
+        className="confirm-dialog"
+        role="dialog"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="confirm-mark">
+          <Trash2 size={18} aria-hidden="true" />
+        </div>
+        <div className="confirm-copy">
+          <h2 id="confirm-title">{confirmation.title}</h2>
+          <p>{confirmation.message}</p>
+        </div>
+        <div className="confirm-actions">
+          <button className="secondary-button" type="button" onClick={onCancel}>Cancel</button>
+          <button className="danger-button" type="button" onClick={onConfirm}>{confirmation.confirmLabel}</button>
+        </div>
+      </section>
+    </div>
   )
 }
 
@@ -439,7 +515,7 @@ function SessionSetup({
   onFilingsChanged,
   onComplete,
   onSuccess,
-  onCompanyDeleted,
+  onDeleteCompany,
 }: {
   token: string | null
   ready: boolean
@@ -456,7 +532,7 @@ function SessionSetup({
   onFilingsChanged: () => void
   onComplete: () => void
   onSuccess: (message: string) => void
-  onCompanyDeleted: (company: Company) => void
+  onDeleteCompany: (company: Company) => void
 }) {
   const selectedCompany = session.config?.companyTicker
     ? companies.find((company) => company.ticker === session.config?.companyTicker)
@@ -487,7 +563,7 @@ function SessionSetup({
               companies={companies}
               loading={companiesLoading}
               onError={onError}
-              onDeleted={onCompanyDeleted}
+              onDeleteCompany={onDeleteCompany}
               onSuccess={(message) => {
                 onSuccess(message)
                 onCompaniesChanged()
@@ -533,14 +609,14 @@ function CompanySetup({
   companies,
   loading,
   onError,
-  onDeleted,
+  onDeleteCompany,
   onSuccess,
 }: {
   token: string | null
   companies: Company[]
   loading: boolean
   onError: (error: unknown) => void
-  onDeleted: (company: Company) => void
+  onDeleteCompany: (company: Company) => void
   onSuccess: (message: string) => void
 }) {
   const [ticker, setTicker] = useState('AAPL')
@@ -550,14 +626,6 @@ function CompanySetup({
     mutationFn: () => api.createCompany({ ticker, cik, name }, { token }),
     onError,
     onSuccess: (company) => onSuccess(`${company.ticker} added to your filing corpus.`),
-  })
-  const deleteMutation = useMutation({
-    mutationFn: (company: Company) => api.deleteCompany(company.ticker, { token }),
-    onError,
-    onSuccess: (_response, company) => {
-      onDeleted(company)
-      onSuccess(`${company.ticker} deleted from your filing corpus.`)
-    },
   })
 
   return (
@@ -588,12 +656,7 @@ function CompanySetup({
               className="row-icon-button"
               type="button"
               title={`Delete ${company.ticker}`}
-              disabled={deleteMutation.isPending}
-              onClick={() => {
-                if (window.confirm(`Delete ${company.ticker} and all indexed filings for it?`)) {
-                  deleteMutation.mutate(company)
-                }
-              }}
+              onClick={() => onDeleteCompany(company)}
             >
               <Trash2 size={14} aria-hidden="true" />
             </button>
