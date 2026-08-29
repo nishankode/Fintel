@@ -568,7 +568,7 @@ function SessionIngestionSetup({
       setJobId(job.id)
       onUpdateSession((current) => ({
         ...current,
-        title: makeSessionConfigTitle(ticker, selectedFilingTypes, selectedYears),
+        title: makeSessionConfigTitle(selectedCompany?.name ?? ticker, selectedYears),
         updatedAt: new Date().toISOString(),
         config: {
           companyId: selectedCompany?.id ?? null,
@@ -786,7 +786,18 @@ function ChatWorkspace({
       </div>
       <form className="composer-wrap" onSubmit={(event) => { event.preventDefault(); ask(question) }}>
         <div className="composer">
-          <textarea value={question} onChange={(event) => setQuestion(event.target.value)} placeholder="Ask about SEC filings..." rows={2} />
+          <textarea
+            value={question}
+            onChange={(event) => setQuestion(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault()
+                ask(question)
+              }
+            }}
+            placeholder="Ask about SEC filings..."
+            rows={2}
+          />
           <button className="send-button" type="submit" disabled={!question.trim() || mutation.isPending} title="Send question">
             {mutation.isPending ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Send size={18} aria-hidden="true" />}
           </button>
@@ -909,12 +920,13 @@ function makeDraftConfig(company?: Company): SessionConfig {
   }
 }
 
-function makeSessionConfigTitle(ticker: string, filingTypes: string[], filingYears: number[]) {
-  const yearLabel = filingYears.length > 2
-    ? `${Math.min(...filingYears)}-${Math.max(...filingYears)}`
-    : filingYears.join(', ')
+function makeSessionConfigTitle(companyName: string, filingYears: number[]) {
+  const years = [...filingYears].sort((left, right) => right - left)
+  const yearLabel = years.length > 2
+    ? `${Math.min(...years)}-${Math.max(...years)}`
+    : years.join(', ')
 
-  return `${ticker} ${filingTypes.join(', ')} ${yearLabel}`.trim()
+  return `${companyName} ${yearLabel}`.trim()
 }
 
 function shouldConfigureSession(session: ChatSession, editingSessionId: string | null) {

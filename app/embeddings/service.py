@@ -1,7 +1,3 @@
-from langchain_huggingface import HuggingFaceEmbeddings
-import torch
-
-
 BGE_QUERY_INSTRUCTION = (
     "Represent this sentence for searching relevant passages: "
 )
@@ -20,7 +16,11 @@ class EmbeddingService:
         self.document_batch_size = document_batch_size
 
         if cpu_threads is not None and cpu_threads > 0:
+            import torch
+
             torch.set_num_threads(cpu_threads)
+
+        from langchain_huggingface import HuggingFaceEmbeddings
 
         self.model = HuggingFaceEmbeddings(
             model_name=model_name,

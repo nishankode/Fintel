@@ -788,10 +788,11 @@ textarea:focus {
 }
 
 .chat-workspace {
-  display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  display: flex;
+  flex-direction: column;
   height: 100vh;
   min-width: 0;
+  min-height: 0;
   background: var(--bg);
 }
 
@@ -931,6 +932,7 @@ textarea:focus {
   display: flex;
   flex-direction: column;
   gap: 22px;
+  flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
   padding: 26px 24px 32px;
@@ -1049,6 +1051,7 @@ textarea:focus {
 }
 
 .composer-wrap {
+  flex: 0 0 auto;
   width: min(760px, calc(100% - 48px));
   margin: 0 auto 14px;
 }
@@ -1072,6 +1075,7 @@ textarea:focus {
 
 .composer textarea {
   min-height: 70px;
+  max-height: 180px;
   border: 0;
   box-shadow: none;
 }
